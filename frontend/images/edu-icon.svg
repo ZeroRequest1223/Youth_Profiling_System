@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <style>.g{fill:#6b6b6b}.s{fill:#dcdcdc}</style>
+  </defs>
+  <rect width="128" height="128" rx="12" fill="#fff"/>
+  <path class="g" d="M16 48 L64 24 L112 48 L64 72 Z" />
+  <path class="s" d="M64 80c-16 0-28 6-28 14v6h56v-6c0-8-12-14-28-14z" />
+  <path class="g" d="M64 80c-16 0-28 6-28 14v6h56v-6c0-8-12-14-28-14z" fill="none" stroke="#6b6b6b" stroke-width="3"/>
+</svg>

@@ -1,4 +1,4 @@
-from backend.lydo_backend import init_db, add_barangay, add_youth_record, list_youth
+from helper_scripts.lydo_backend import init_db, add_barangay, add_youth_record, list_youth
 
 # Ensure DB and tables exist
 init_db()

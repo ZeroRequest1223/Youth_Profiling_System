@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Richer house icon matching provided artwork (colorful, outlined) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="256" height="256" role="img" aria-label="House icon">
+  <defs>
+    <style>
+      .wall{fill:#ffd06b}
+      .roof{fill:#ff5470}
+      .trim{fill:#1b2540}
+      .window{fill:#a7e0ff}
+      .bush{fill:#55c57a}
+      .stroke{fill:none;stroke:#1b2540;stroke-linecap:round;stroke-linejoin:round;stroke-width:4}
+    </style>
+  </defs>
+
+  <!-- back bushes -->
+  <path class="bush" d="M8 92c6-10 20-14 30-12s18 8 30 8 22-6 30-8 24 2 30 12v8H8z" />
+  <path class="stroke" d="M8 92c6-10 20-14 30-12s18 8 30 8 22-6 30-8 24 2 30 12v8H8z" />
+
+  <!-- main house body -->
+  <path class="wall" d="M20 60h40v34H20z" />
+  <path class="stroke" d="M20 60h40v34H20z" />
+
+  <!-- right extension -->
+  <path class="wall" d="M64 48h36v46H64z" />
+  <path class="stroke" d="M64 48h36v46H64z" />
+
+  <!-- roofs -->
+  <path class="roof" d="M14 62l46-32 46 32v6H14z" />
+  <path class="stroke" d="M14 62l46-32 46 32v6H14z" />
+
+  <!-- small roof piece over left gable -->
+  <path class="roof" d="M14 62l28-18 18 12v6H14z" />
+  <path class="stroke" d="M14 62l28-18 18 12v6H14z" />
+
+  <!-- door -->
+  <rect x="36" y="74" width="16" height="20" rx="2" ry="2" fill="#ff6b6b" stroke="#1b2540" stroke-width="3" />
+
+  <!-- windows -->
+  <rect x="22" y="68" width="10" height="10" rx="1.5" class="window" stroke="#1b2540" stroke-width="2" />
+  <rect x="74" y="68" width="10" height="10" rx="1.5" class="window" stroke="#1b2540" stroke-width="2" />
+  <rect x="86" y="68" width="8" height="8" rx="1.2" class="window" stroke="#1b2540" stroke-width="2" />
+
+  <!-- foundation / base line -->
+  <path class="stroke" d="M12 106h104" />
+
+  <!-- chimney -->
+  <rect x="84" y="20" width="8" height="18" rx="1.2" ry="1.2" fill="#c48b2b" stroke="#1b2540" stroke-width="3" />
+
+</svg>
+

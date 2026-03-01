@@ -1,0 +1,174 @@
+﻿[
+{
+  "model": "auth.user",
+  "pk": 1,
+  "fields": {
+    "password": "pbkdf2_sha256$600000$yaRCZMskkSgNTrVFBAWSTH$VlNzsS1wC7X0ir4N3bE3IJx+wdA9JEs1MXX45zH+xBI=",
+    "last_login": "2026-03-01T10:11:47.795Z",
+    "is_superuser": true,
+    "username": "Admin",
+    "first_name": "",
+    "last_name": "",
+    "email": "admin@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-03-01T10:11:20.518Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "monitoring.barangay",
+  "pk": 1,
+  "fields": {
+    "name": "Agusan Canyon"
+  }
+},
+{
+  "model": "monitoring.barangay",
+  "pk": 2,
+  "fields": {
+    "name": "Alae"
+  }
+},
+{
+  "model": "monitoring.barangay",
+  "pk": 3,
+  "fields": {
+    "name": "Dahilayan"
+  }
+},
+{
+  "model": "monitoring.barangay",
+  "pk": 4,
+  "fields": {
+    "name": "Dalirig"
+  }
+},
+{
+  "model": "monitoring.barangay",
+  "pk": 5,
+  "fields": {
+    "name": "Damilag"
+  }
+},
+{
+  "model": "monitoring.barangay",
+  "pk": 6,
+  "fields": {
+    "name": "Diclum"
+  }
+},
+{
+  "model": "monitoring.barangay",
+  "pk": 7,
+  "fields": {
+    "name": "Guilang-guilang"
+  }
+},
+{
+  "model": "monitoring.barangay",
+  "pk": 8,
+  "fields": {
+    "name": "Kalugmanan"
+  }
+},
+{
+  "model": "monitoring.barangay",
+  "pk": 9,
+  "fields": {
+    "name": "Lindaban"
+  }
+},
+{
+  "model": "monitoring.barangay",
+  "pk": 10,
+  "fields": {
+    "name": "Lingion"
+  }
+},
+{
+  "model": "monitoring.barangay",
+  "pk": 11,
+  "fields": {
+    "name": "Lunocan"
+  }
+},
+{
+  "model": "monitoring.barangay",
+  "pk": 12,
+  "fields": {
+    "name": "Maluko"
+  }
+},
+{
+  "model": "monitoring.barangay",
+  "pk": 13,
+  "fields": {
+    "name": "Mambatangan"
+  }
+},
+{
+  "model": "monitoring.barangay",
+  "pk": 14,
+  "fields": {
+    "name": "Mampayag"
+  }
+},
+{
+  "model": "monitoring.barangay",
+  "pk": 15,
+  "fields": {
+    "name": "Mantibugao"
+  }
+},
+{
+  "model": "monitoring.barangay",
+  "pk": 16,
+  "fields": {
+    "name": "Minsuro"
+  }
+},
+{
+  "model": "monitoring.barangay",
+  "pk": 17,
+  "fields": {
+    "name": "San Miguel"
+  }
+},
+{
+  "model": "monitoring.barangay",
+  "pk": 18,
+  "fields": {
+    "name": "Sankanan"
+  }
+},
+{
+  "model": "monitoring.barangay",
+  "pk": 19,
+  "fields": {
+    "name": "Santiago"
+  }
+},
+{
+  "model": "monitoring.barangay",
+  "pk": 20,
+  "fields": {
+    "name": "Santo Ni±o"
+  }
+},
+{
+  "model": "monitoring.barangay",
+  "pk": 21,
+  "fields": {
+    "name": "Tankulan"
+  }
+},
+{
+  "model": "monitoring.barangay",
+  "pk": 22,
+  "fields": {
+    "name": "Ticala"
+  }
+}
+]

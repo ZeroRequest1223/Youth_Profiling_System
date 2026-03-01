@@ -1,5 +1,5 @@
 import os
-from backend.db import (
+from helper_scripts.db import (
     init_db,
     add_barangay,
     list_barangays,

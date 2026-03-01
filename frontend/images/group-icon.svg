@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <style>.stroke{fill:none;stroke:#7a7a7a;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.fill{fill:#dcdcdc}</style>
+  </defs>
+  <rect width="128" height="128" rx="12" fill="#fff"/>
+  <circle cx="64" cy="38" r="14" class="fill" />
+  <path d="M41 78c6-12 20-18 31-18s25 6 31 18" class="fill" />
+  <circle cx="64" cy="38" r="14" class="stroke" />
+  <path d="M41 78c6-12 20-18 31-18s25 6 31 18" class="stroke" />
+  <circle cx="36" cy="44" r="10" class="stroke" />
+  <circle cx="92" cy="44" r="10" class="stroke" />
+</svg>

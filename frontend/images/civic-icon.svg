@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <style>.st{fill:#333}.bg{fill:#fff}</style>
+  </defs>
+  <rect width="128" height="128" rx="12" class="bg" />
+  <path class="st" d="M20 90h88v6H20z" />
+  <path class="st" d="M28 82h8v-24h-8zM48 82h8v-24h-8zM68 82h8v-24h-8zM88 82h8v-24h-8z" />
+  <path class="st" d="M18 52l46-28 46 28H18z" />
+</svg>

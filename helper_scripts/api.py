@@ -3,7 +3,7 @@ from sqlite3 import IntegrityError
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from backend.db import (
+from helper_scripts.db import (
     init_db,
     add_barangay,
     list_barangays,

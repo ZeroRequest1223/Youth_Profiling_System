@@ -27,6 +27,12 @@ urlpatterns = [
     path('api/register/', views.register_view, name='register'),
     path('api/logout/', views.logout_view, name='logout'),
     path('api/user/', views.user_info_view, name='user_info'),
+    path('api/barangays/', views.barangays_api, name='barangays_api'),
+    path('login/', views.login_page, name='login_page'),
+    path('reports.html', views.reports_page, name='reports_page'),
+    path('reports/', views.reports_page, name='reports_list'),
+    path('reports/<int:bid>/', views.reports_page, name='reports_by_barangay'),
+    path('api/barangay_summary/<int:bid>/', views.barangay_summary, name='barangay_summary'),
     
     # Data Endpoints
     path('api/youth/', views.youth_api, name='youth_api'),

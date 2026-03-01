@@ -60,12 +60,199 @@ def user_info_view(request):
         return JsonResponse({'is_authenticated': True, 'username': request.user.username})
     return JsonResponse({'is_authenticated': False}, status=401)
 
+
+def barangays_api(request):
+    """Return list of barangays as JSON (id and name)."""
+    b = Barangay.objects.all().order_by('name')
+    # If no barangays exist, seed a default list so frontend can function
+    if not b.exists():
+        default_names = [
+            "Agusan Canyon","Alae","Dahilayan","Dalirig","Damilag","Diclum",
+            "Guilang-guilang","Kalugmanan","Lindaban","Lingion","Lunocan","Maluko",
+            "Mambatangan","Mampayag","Mantibugao","Minsuro","San Miguel","Sankanan",
+            "Santiago","Santo Niño","Tankulan","Ticala"
+        ]
+        for name in default_names:
+            Barangay.objects.create(name=name)
+        b = Barangay.objects.all().order_by('name')
+
+    data = [{'id': bg.id, 'name': bg.name} for bg in b]
+    return JsonResponse(data, safe=False)
+
+
+def barangay_summary(request, bid):
+    """Return aggregated demographics summary for a barangay."""
+    from django.db.models import Count, Q
+
+    barangay = get_object_or_404(Barangay, id=bid)
+    youths = Youth.objects.filter(barangay=barangay)
+
+    # Sex counts
+    sex_counts = youths.values('sex').annotate(count=Count('id'))
+
+    # Compute age counts by Python to avoid complex DB functions
+    age_counts = {}
+    import datetime
+    # Also compute per-age breakdowns for sex, civil status, and education to support table layout
+    sex_by_age = {}
+    civil_by_age = {}
+    edu_by_age = {}
+    for y in youths:
+        a = y.age
+        age_counts[str(a)] = age_counts.get(str(a), 0) + 1
+
+        # Sex by age
+        s = (y.sex or 'Unknown')
+        sex_by_age.setdefault(s, {})
+        sex_by_age[s][str(a)] = sex_by_age[s].get(str(a), 0) + 1
+
+        # Civil status by age
+        cs = (y.civil_status or 'Unknown')
+        civil_by_age.setdefault(cs, {})
+        civil_by_age[cs][str(a)] = civil_by_age[cs].get(str(a), 0) + 1
+
+        # Education by age
+        ed = (y.education_level or 'Unknown')
+        edu_by_age.setdefault(ed, {})
+        edu_by_age[ed][str(a)] = edu_by_age[ed].get(str(a), 0) + 1
+
+    # Civil status counts
+    civil_counts = youths.values('civil_status').annotate(count=Count('id'))
+
+    # Education level counts
+    edu_counts = youths.values('education_level').annotate(count=Count('id'))
+
+    # PWD / 4Ps / OSY counts
+    pwd = youths.filter(is_pwd=True).count()
+    fourps = youths.filter(is_4ps=True).count()
+    osy = youths.filter(is_osy=True).count()
+    # OSY split by sex
+    osy_male = youths.filter(is_osy=True, sex='Male').count()
+    osy_female = youths.filter(is_osy=True, sex='Female').count()
+
+    data = {
+        'barangay_id': barangay.id,
+        'barangay_name': barangay.name,
+        'total': youths.count(),
+        'sex': {item['sex'] or 'Unknown': item['count'] for item in sex_counts},
+        'sex_by_age': sex_by_age,
+        'ages': age_counts,
+        'civil_status': {item['civil_status'] or 'Unknown': item['count'] for item in civil_counts},
+        'civil_by_age': civil_by_age,
+        'education': {item['education_level'] or 'Unknown': item['count'] for item in edu_counts},
+        'education_by_age': edu_by_age,
+        'pwd': pwd,
+        'fourps': fourps,
+        'osy': osy,
+        'osy_male': osy_male,
+        'osy_female': osy_female,
+    }
+    return JsonResponse(data)
+
+
+def report_responder_types(request):
+    """Return responder type distribution for reports page.
+    No dedicated responder model exists in this project, so return
+    a sensible default distribution. This endpoint can later be
+    updated to aggregate real responder data if/when that model
+    is added.
+    """
+    data = {
+        'labels': ['Bureau of Fire Protection', 'Local Government Unit (LGU)', 'Volunteer Fire Brigades', 'Private'],
+        'values': [60, 30, 6, 4]
+    }
+    return JsonResponse(data)
+
+
+def report_top_cities(request):
+    """Return top municipalities by youth record count as a proxy for incidents.
+    Uses `Youth.municipality` aggregation where available; falls back to
+    sample data if no records exist.
+    """
+    from django.db.models import Count
+
+    # Prefer aggregating by Barangay name so the frontend legend shows barangays
+    qs = Youth.objects.values('barangay__name').annotate(count=Count('id')).order_by('-count')
+    labels = [r['barangay__name'] or 'Unknown' for r in qs[:30]]
+    values = [r['count'] for r in qs[:30]]
+
+    # If no youths exist, fall back to the Barangay table (zero counts) so
+    # the frontend legend can still display actual barangay names.
+    if len(labels) == 0:
+        bgs = Barangay.objects.all().order_by('name')
+        if bgs.exists():
+            labels = [b.name for b in bgs[:30]]
+            values = [0 for _ in labels]
+        else:
+            # final fallback sample matching the example screenshots
+            labels = ['Taguig','Cebu','Quezon City','Tagbilaran','Makati','Paranaque','Guiguinto','Cainta','Cagayan De Oro','Pasig','Manila','Muntinlupa','Orion','Dasmarinas','Antipolo','Santa Rosa','Malate','Pasay','Hagonoy','Arayat','Zamboanga','Ilagan','Valenzuela','Bacolod','Iloilo','Naga','Lipa','Lapu-Lapu','Marikina','Sagay']
+            values = [920,380,320,305,280,210,160,150,140,135,120,110,105,100,98,95,90,88,85,82,76,70,68,65,62,60,58,55,50]
+
+    return JsonResponse({'labels': labels, 'values': values})
+
+
+def report_avg_response_time(request):
+    """Return average response time per responder type.
+    No response-time data model exists; return sample values (in seconds)
+    so Chart.js can render minutes by dividing values on the frontend.
+    """
+    data = {
+        'labels': ['Bureau of Fire Protection','Local Government Unit (LGU)','Volunteer Fire Brigades','Private'],
+        'values': [1200, 1400, 1700, 1500]  # example seconds values
+    }
+    return JsonResponse(data)
+
+
+def login_page(request):
+    """Render standalone login page."""
+    return render(request, 'login.html')
+
+
+def reports_page(request, bid=None):
+    """Render the reports frontend page.
+
+    If `bid` (barangay id) is provided, pass it to the template so the
+    frontend can request barangay-specific data. This makes the URL
+    (/reports/<bid>/) reflect the database's barangays.
+    """
+    # Build top-cities data from the Barangay table and Youth counts so
+    # the frontend legend shows the actual barangay names from the DB.
+    from django.db.models import Count
+
+    bgs = list(Barangay.objects.all().order_by('name').values('id', 'name'))
+    labels = [b['name'] for b in bgs]
+    values = []
+    for b in bgs:
+        cnt = Youth.objects.filter(barangay_id=b['id']).count()
+        values.append(cnt)
+
+    top_cities = {'labels': labels, 'values': values}
+
+    # Provide responder and avg-response placeholders so the template
+    # can use server-provided values if desired.
+    responder = {
+        'labels': ['Bureau of Fire Protection', 'Local Government Unit (LGU)', 'Volunteer Fire Brigades', 'Private'],
+        'values': [60, 30, 6, 4]
+    }
+    avg_resp = {
+        'labels': responder['labels'],
+        'values': [1200, 1400, 1700, 1500]
+    }
+
+    context = {
+        'barangay_id': bid,
+        'top_cities_json': json.dumps(top_cities),
+        'responder_json': json.dumps(responder),
+        'avg_json': json.dumps(avg_resp),
+    }
+    return render(request, 'reports.html', context)
+
 # --- APP VIEWS ---
 
 @ensure_csrf_cookie
 def index(request):
     """Serves the frontend HTML page"""
-    return render(request, 'index.html')
+    return render(request, 'dashboard.html')
 
 @csrf_exempt
 def youth_api(request):

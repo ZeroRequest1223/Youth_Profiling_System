@@ -1,5 +1,12 @@
 /* frontend/style.css */
 
+:root {
+    --pdf-header: #007b43; /* green used in PDF header */
+    --pdf-row: #f0faf0; /* light green for alternating rows */
+    --pdf-firstcol: #00563f; /* darker green for first-column labels */
+    --pdf-border: #969696; /* table border color */
+}
+
 .admin-only {
     display: none;
 }
@@ -17,6 +24,7 @@
     transition: transform 0.2s ease-in-out, border-color 0.2s;
     height: 100%;
     border: 1px solid rgba(0,0,0,0.125);
+    position: relative;
 }
 
 .barangay-card:hover {
@@ -24,3 +32,226 @@
     background-color: #f8f9fa;
     border-color: #0d6efd !important;
 }
+
+/* Login page background and login card styling (background image removed) */
+body.login-page {
+    background-image: none;
+    background-color: #f8f9fa;
+}
+
+/* Refined login card appearance and logo sizing (blue-tinted to blend with logo) */
+.login-page .login-card {
+    background: linear-gradient(180deg, rgba(235,245,255,0.96), rgba(245,250,255,0.94));
+    border-radius: 10px;
+    border: 1px solid rgba(13,110,253,0.12);
+    box-shadow: 0 8px 20px rgba(3,27,76,0.10);
+    padding: 1rem;
+    border-left: 6px solid rgba(13,110,253,0.18);
+}
+
+.login-page .login-card .card-header {
+    background: linear-gradient(90deg, #0d6efd, #0b5ed7) !important;
+    color: #fff;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.login-logo {
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+.login-logo img {
+    max-height: 110px;
+    width: auto;
+    display: inline-block;
+}
+
+.login-card.two-column { display:flex; padding:0; overflow:hidden; border-radius:10px; max-width:540px; box-shadow: 0 8px 20px rgba(18,38,63,0.06); align-items:stretch; }
+.login-card.two-column .left-panel { background: linear-gradient(135deg,#0b5ed7 0%, #0d6efd 100%); color: #fff; padding: 0.9rem 1.0rem; flex: 0 0 200px; display:flex; flex-direction:column; justify-content:flex-start; align-items:center; text-align:center; position:relative; }
+.login-card.two-column .left-panel .login-logo { align-self:center; margin-bottom:8px; }
+.login-card.two-column .left-panel .login-logo img { max-height:72px; width:auto; display:block; }
+.login-card.two-column .left-panel h2 { margin: 0 0 6px 0; font-size: 0.96rem; line-height:1.12; font-weight:700; }
+.login-card.two-column .left-panel p { margin:0 0 8px 0; color: rgba(255,255,255,0.92); font-size:0.86rem; }
+.login-card.two-column .left-panel ul { list-style:none; padding:0; margin-top:6px; }
+.login-card.two-column .left-panel li { margin:6px 0; color: rgba(255,255,255,0.96); font-size:0.86rem; display:flex; align-items:center; justify-content:center; }
+.login-card.two-column .left-panel li::before { content: '\2713'; display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; margin-right:10px; background: rgba(255,255,255,0.12); color: #fff; border-radius:50%; font-size:12px; }
+.login-card.two-column .right-panel { background: #ffffff; padding: 0.9rem 1.0rem; flex:1; display:flex; flex-direction:column; justify-content:center; }
+.login-card.two-column .left-panel { border-top-left-radius:12px; border-bottom-left-radius:12px; }
+.login-card.two-column .right-panel { border-top-right-radius:12px; border-bottom-right-radius:12px; }
+
+/* subtle vertical seam between panels */
+.login-card.two-column .left-panel::after { content: ''; position: absolute; right: -8px; top: 0; bottom: 0; width: 16px; pointer-events: none; background: linear-gradient(90deg, rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.96) 60%); }
+.form-header { background: transparent; border-bottom: none; padding:0 0 8px 0; }
+.form-header h5 { color:#0d2e4a; font-weight:700; margin:0 0 6px 0; }
+.form-subtitle { color:#7a8a99; font-size:0.875rem; margin-bottom:14px; }
+.login-card.two-column .right-panel .card-body { padding: 0; }
+
+/* Tighter form controls and button */
+.right-panel .form-control { border-radius:8px; padding:0.45rem 0.6rem; font-size:0.92rem; }
+.right-panel .btn-primary { background: linear-gradient(90deg,#0d6efd,#0b5ed7); border:none; border-radius:8px; padding:0.45rem 0.6rem; font-size:0.94rem; box-shadow: 0 5px 14px rgba(11,94,215,0.10); }
+.right-panel .btn-primary:active, .right-panel .btn-primary:focus { box-shadow: 0 4px 12px rgba(11,94,215,0.12); }
+
+/* Slightly darker page background and centered container */
+body.login-page { background: linear-gradient(135deg,#eef6ff,#e6f0ff); }
+
+@media (max-width: 767px) {
+    .login-card.two-column { flex-direction: column; max-width: 94%; }
+    .login-card.two-column .left-panel { min-width: auto; padding: 1rem; align-items:center; text-align:center; }
+    .login-card.two-column .right-panel { padding: 1rem; }
+}
+
+/* Dashboard stat cards */
+.stats-row { margin-top: 6px; margin-bottom: 18px; }
+.stats-row .col-md-3 { display:flex; justify-content:center; }
+.stat-card { width: 260px; min-height:72px; background: #ffffff; border-radius:12px; padding:10px 14px; display:flex; align-items:center; justify-content:space-between; box-shadow: 0 8px 22px rgba(18,38,63,0.04); }
+.stat-card { position: relative; }
+.stat-card::before { content: ''; position: absolute; left: -6px; top: 50%; transform: translateY(-50%); width: 6px; height: 56%; border-radius:6px; background: linear-gradient(180deg, rgba(13,110,253,0.95), rgba(13,110,253,0.65)); }
+.stat-card.border-left-success::before { background: linear-gradient(180deg, rgba(25,135,84,0.95), rgba(25,135,84,0.65)); }
+.stat-card.border-left-warning::before { background: linear-gradient(180deg, rgba(255,193,7,0.95), rgba(255,193,7,0.65)); }
+.stat-card.border-left-info::before { background: linear-gradient(180deg, rgba(13,202,240,0.95), rgba(13,202,240,0.65)); }
+.stat-icon { width:42px; height:42px; display:flex; align-items:center; justify-content:center; border-radius:10px; background: #ffffff; box-shadow: 0 3px 10px rgba(3,27,76,0.04); border:1px solid rgba(3,27,76,0.04); }
+.stat-value { font-size:1.45rem; font-weight:700; color:#0b2e4a; line-height:1; }
+.stat-card .text-muted.small { color:#6c757d; margin-top:4px; }
+.border-left-primary { border-left: 6px solid #0d6efd; }
+.border-left-success { border-left: 6px solid #198754; }
+.border-left-warning { border-left: 6px solid #ffc107; }
+.border-left-info { border-left: 6px solid #0dcaf0; }
+
+@media (max-width: 767px) {
+    .stat-card { padding: 0.75rem; }
+    .stat-value { font-size:1.15rem; }
+}
+
+/* Select barangay search card */
+.select-bar { border-radius: 12px; }
+.select-icon { width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:#e9f2ff; border-radius:8px; box-shadow: 0 3px 10px rgba(13,110,253,0.06); }
+
+/* Barangay grid item tweaks to match screenshot tiles */
+.barangay-card { border-radius:10px; padding:28px 12px; text-align:center; }
+.barangay-card h5 { margin-bottom:6px; font-size:1rem; color:#0d6efd; }
+.barangay-card small { display:block; margin-top:6px; color:#6c757d; }
+
+/* Badge indicator on barangay tiles (top-right) */
+.barangay-badge { position: absolute; top:10px; right:12px; background: #e9f2ff; color:#0d6efd; border-radius:14px; padding:4px 8px; display:flex; align-items:center; gap:6px; box-shadow: 0 4px 12px rgba(11,94,215,0.06); font-size:0.85rem; font-weight:600; }
+.barangay-badge img { width:16px; height:16px; display:block; }
+
+/* Nav icon styles */
+.nav-icon { width:45px; height:55px; }
+.nav-icon-small { width:25x; height:35px; }
+.navbar .nav-link img, .navbar .btn img { vertical-align: middle; }
+
+/* Barangay tile icon */
+.barangay-icon { max-width:44px; max-height:44px; display:block; object-fit:contain; }
+
+/* Left-side collapsible menu */
+#side-menu { position: fixed; left: 0; top: 0; bottom: 0; width: 260px; background: #ffffff; transform: translateX(-100%); transition: transform 0.28s ease; z-index: 1050; box-shadow: 4px 0 24px rgba(8,24,48,0.08); padding: 1rem; }
+#side-menu.open { transform: translateX(0); }
+.side-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); opacity: 0; visibility: hidden; transition: opacity 0.2s ease; z-index: 1040; }
+.side-overlay.show { opacity: 1; visibility: visible; }
+.side-menu .menu-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; color: #0b2e4a; border-radius: 6px; text-decoration: none; }
+.side-menu .menu-item:hover { background: rgba(13,110,253,0.04); text-decoration: none; }
+
+@media (min-width: 992px) {
+    /* On larger screens keep the menu overlay behavior, but allow slightly wider menu */
+    #side-menu { width: 260px; }
+}
+
+/* Pin the menu toggle to the very left edge of the screen (extra-large tappable area) */
+#menu-toggle { position: fixed; left: 0; top: 12px; z-index: 1075; border-radius: 0 12px 12px 0; padding: 14px 18px; box-shadow: 0 10px 28px rgba(8,24,48,0.10); display:flex; align-items:center; justify-content:center; }
+#menu-toggle svg { display:block; width:32px; height:32px; }
+
+/* Slightly larger hit area on small screens */
+@media (max-width: 576px) {
+    #menu-toggle { top: 8px; padding: 12px 14px; }
+    #menu-toggle svg { width:28px; height:28px; }
+}
+
+@media (min-width: 992px) {
+    .stats-row { margin-left: -18px; margin-right: -18px; }
+}
+
+/* Modal / Youth Profile Form styling (tabs, callouts, card-like checkboxes) */
+.modal-content { border-radius:12px; overflow:visible; }
+.modal-content .nav-tabs { border-bottom: none; display:flex; gap:12px; padding:10px 6px 0 6px; }
+.modal-content .nav-tabs .nav-link { border: none; background:#f7fafc; border-radius:8px; padding:8px 14px; color:#6c757d; position:relative; display:flex; align-items:center; gap:8px; }
+.modal-content .nav-tabs .nav-link::before { content: ''; display: none; }
+.modal-content .nav-tabs .nav-link[href="#tab-personal"]::before { background-image: none; }
+.modal-content .nav-tabs .nav-link[href="#tab-groups"]::before { background-image: none; }
+.modal-content .nav-tabs .nav-link[href="#tab-edu"]::before { background-image: none; }
+.modal-content .nav-tabs .nav-link[href="#tab-civic"]::before { background-image: none; }
+
+/* Show avatar icon only on Personal tab */
+.modal-content .nav-tabs .nav-link[href="#tab-personal"]::before { display: none; }
+
+/* Inline image used instead so it reliably loads */
+.nav-tab-icon { width:18px; height:18px; display:inline-block; margin-right:8px; vertical-align:middle; }
+.nav-tab-icon[alt] { border-radius:3px; }
+.modal-content .nav-tabs .nav-link.active { background: linear-gradient(90deg,#0d6efd,#0b5ed7); color:#fff; box-shadow: 0 6px 18px rgba(11,94,215,0.12); }
+.modal-content .nav-tabs .nav-link.active::before { filter: brightness(0) invert(1); }
+.modal-content .nav-tabs .nav-link .nav-icon-label { display:inline-block; }
+
+/* subtle info callout used in the form */
+.info-callout { background: linear-gradient(90deg,#e9f5ff,#f8fbff); border-left:4px solid #0d6efd; padding:10px 14px; border-radius:6px; margin-bottom:14px; color:#0d6efd; font-weight:600; }
+
+/* Style checkbox items as selectable cards with left icon */
+.tab-pane .form-check { margin-bottom:12px; position:relative; }
+.tab-pane .form-check .form-check-input { position:absolute; left:-9999px; }
+.tab-pane .form-check label { display:block; border:1px solid #e9ecef; padding:12px 14px; border-radius:8px; cursor:pointer; position:relative; background:#fff; transition:all .12s ease; padding-left:54px; color:#2b2f37; }
+.tab-pane .form-check label::before {
+    content: '';
+    width:20px;
+    height:20px;
+    display:block;
+    position:absolute;
+    left:14px;
+    top:50%;
+    transform:translateY(-50%);
+    border-radius:6px;
+    background:#ffffff;
+    border:1px solid #e9ecef;
+    box-shadow: inset 0 0 0 rgba(0,0,0,0);
+    transition: all .12s ease;
+}
+.tab-pane .form-check label::after {
+    content: '';
+    position: absolute;
+    left:18px;
+    top: 50%;
+    width: 8px;
+    height: 6px;
+    border-left: 2px solid transparent;
+    border-bottom: 2px solid transparent;
+    transform: translateY(-50%) rotate(-45deg) scale(0);
+    transition: transform .12s ease, border-color .12s ease;
+}
+.tab-pane .form-check input[type="checkbox"]:checked + label::before {
+    background: linear-gradient(90deg,#0d6efd,#0b5ed7);
+    border-color: #0d6efd;
+    box-shadow: 0 6px 18px rgba(11,94,215,0.12);
+}
+.tab-pane .form-check input[type="checkbox"]:checked + label::after {
+    transform: translateY(-50%) rotate(-45deg) scale(1);
+    border-left: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+}
+.tab-pane .form-check input[type="checkbox"]:checked ~ label::before {
+    background: linear-gradient(90deg,#0d6efd,#0b5ed7);
+    border-color: #0d6efd;
+    box-shadow: 0 6px 18px rgba(11,94,215,0.12);
+}
+.tab-pane .form-check input[type="checkbox"]:checked ~ label::after {
+    transform: translateY(-50%) rotate(-45deg) scale(1);
+    border-left: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+}
+
+/* make form footer buttons compact and aligned */
+.modal-footer { display:flex; justify-content:flex-end; gap:8px; }
+.modal .btn { min-width:100px; }
+
+@media (max-width: 767px) {
+    .modal-content .nav-tabs { flex-wrap:wrap; }
+    .tab-pane .form-check label { padding-left:48px; }
+}
+
+

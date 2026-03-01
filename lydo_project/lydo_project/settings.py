@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from urllib.parse import urlparse
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -88,10 +89,62 @@ WSGI_APPLICATION = 'lydo_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# Database configuration
+# Priority:
+# 1) `DATABASE_URL` env var (preferred)
+# 2) Individual POSTGRES_* env vars
+# 3) Fallback to local SQLite for development
+
+def _parse_database_url(url: str):
+    # Minimal DATABASE_URL parser (postgres://user:pass@host:port/dbname)
+    result = urlparse(url)
+    return {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': result.path.lstrip('/'),
+        'USER': result.username or 'postgres',
+        'PASSWORD': result.password or '',
+        'HOST': result.hostname or '127.0.0.1',
+        'PORT': str(result.port or '5432'),
+    }
+
+
+# DATABASES placeholder and resolution order:
+# - If `DATABASE_URL` is set prefer that (supports dj-database-url)
+# - Else if any `POSTGRES_*` vars are set, use them
+# - Else fall back to local defaults
+# Example (keeps here as reference):
+# DATABASES = {}
+# if os.environ.get('DATABASE_URL'):
+#     # prefer dj-database-url if installed, otherwise use local parser
+#     try:
+#         import dj_database_url
+#
+#         DATABASES['default'] = dj_database_url.parse(os.environ['DATABASE_URL'], conn_max_age=600)
+#     except Exception:
+#         DATABASES['default'] = _parse_database_url(os.environ['DATABASE_URL'])
+#         DATABASES['default']['CONN_MAX_AGE'] = 600
+#         DATABASES['default']['OPTIONS'] = {'connect_timeout': 10}
+# elif os.environ.get('POSTGRES_DB') or os.environ.get('POSTGRES_USER') or os.environ.get('POSTGRES_PASSWORD') or os.environ.get('POSTGRES_HOST'):
+#     DATABASES['default'] = {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.environ.get('POSTGRES_DB', 'lydo'),
+#         'USER': os.environ.get('POSTGRES_USER', 'postgres'),
+#         'PASSWORD': os.environ.get('POSTGRES_PASSWORD', ''),
+#         # prefer IPv4 loopback to avoid IPv6 binding mismatch
+#         'HOST': os.environ.get('POSTGRES_HOST', '127.0.0.1'),
+#         'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+#         'CONN_MAX_AGE': 600,
+#         'OPTIONS': {'connect_timeout': 10},
+#     }
+# else:
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'lydo',
+        'USER': 'postgres',
+        'PASSWORD': 'P@ssw0rd',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 

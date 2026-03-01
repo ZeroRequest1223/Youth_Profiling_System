@@ -5,3 +5,5 @@ better-profanity
 django-cors-headers
 pandas
 numpy
+psycopg2-binary
+dj-database-url

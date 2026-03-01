@@ -1,0 +1,316 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+            <meta charset="UTF-8">
+            <!-- Sets document character encoding to UTF-8 -->
+            <title>Local Youth Profiling System</title>
+            <!-- Page title shown in the browser tab -->
+            <!-- Bootstrap CSS -->
+            <!-- Load Bootstrap CSS for layout and components -->
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+            <!-- Custom CSS -->
+            <!-- Load the app's stylesheet served via Django static -->
+            <link rel="stylesheet" href="{% static 'style.css' %}">
+            <style>
+                /* Ensure youth indicators are NOT shown in the top navbar */
+                .navbar .badge-text,
+                .navbar img[alt="youth"] {
+                    display: none !important;
+                }
+            </style>
+            <!-- Bootstrap JS (bundle) -->
+            <!-- Load Bootstrap JS bundle for interactive components (modals, tabs) -->
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 sticky-top">
+        <div class="container d-flex align-items-center">
+            <button id="menu-toggle" class="btn btn-light btn-sm" onclick="toggleSidebar()" aria-label="Toggle menu">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M3 12h18M3 18h18" stroke="#0d6efd" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+            <a class="navbar-brand d-flex align-items-center ms-2" href="#" onclick="showDashboard()">
+                <img src="{% static 'images/logo.png' %}" id="dashboard-logo" class="nav-icon me-2" alt="logo" style="height:55px; width:auto;">
+                <div class="d-flex flex-column">
+                    <span class="fw-bold">LYDO Youth Profiling</span>
+                    <small class="text-white-50">Manolo Fortich, Bukidnon</small>
+                </div>
+            </a>
+                <div class="d-flex text-white align-items-center">
+                <span id="user-display" class="me-3" style="display:none;">Admin: <b id="username-span"></b></span>
+                
+                <button id="logout-btn" class="btn btn-danger btn-sm" onclick="logout()" style="display:none;">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Left side collapsible menu and overlay -->
+    <div id="side-menu" class="side-menu" aria-hidden="true">
+        <div class="mb-3 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <img src="{% static 'images/logo.png' %}" style="height:36px;width:auto;margin-right:8px;" alt="logo">
+                <strong>LYDO</strong>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary" onclick="closeSidebar()" aria-label="Close menu">✕</button>
+        </div>
+        <hr>
+        <nav class="nav flex-column">
+            <a href="#" class="menu-item nav-link" onclick="showDashboard(); closeSidebar();">Dashboard</a>
+            <a href="/reports.html" class="menu-item nav-link" onclick="closeSidebar();">Reports</a>
+        </nav>
+    </div>
+    <div id="side-overlay" class="side-overlay" onclick="closeSidebar()" aria-hidden="true"></div>
+
+    <div class="container">
+        <div id="dashboard-view">
+            <!-- Top summary stat cards -->
+            <div class="row mb-4 stats-row" id="top-stats">
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="stat-card border-left-primary p-3 rounded shadow-sm d-flex align-items-center">
+                        <div>
+                            <div class="stat-value" id="stat-total">0</div>
+                            <div class="text-muted small">Total Youth</div>
+                        </div>
+                        <div class="stat-icon bg-light text-primary ms-3">
+                            <svg width="22" height="22" fill="currentColor" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path fill-rule="evenodd" d="M14 14s-1-4-6-4-6 4-6 4 1 0 6 0 6 0 6 0z"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="stat-card border-left-success p-3 rounded shadow-sm d-flex align-items-center">
+                        <div>
+                            <div class="stat-value" id="stat-in-school">0</div>
+                            <div class="text-muted small">In School</div>
+                        </div>
+                        <div class="stat-icon bg-light text-success ms-3">
+                            <svg width="22" height="22" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0a4 4 0 0 0-4 4v2a4 4 0 0 0 8 0V4a4 4 0 0 0-4-4z"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="stat-card border-left-warning p-3 rounded shadow-sm d-flex align-items-center">
+                        <div>
+                            <div class="stat-value" id="stat-osy">0</div>
+                            <div class="text-muted small">OSY (Out of School)</div>
+                        </div>
+                        <div class="stat-icon bg-light text-warning ms-3">
+                            <svg width="22" height="22" fill="currentColor" viewBox="0 0 16 16"><path d="M2 2h12v4H2z"/><path d="M4 8h8v6H4z"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="stat-card border-left-info p-3 rounded shadow-sm d-flex align-items-center">
+                        <div>
+                            <div class="stat-value" id="stat-registered">0</div>
+                            <div class="text-muted small">Registered Voters</div>
+                        </div>
+                        <div class="stat-icon bg-light text-info ms-3">
+                            <svg width="22" height="22" fill="currentColor" viewBox="0 0 16 16"><path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Select / Search bar (matches screenshot layout) -->
+            <div class="card mb-4 p-3 shadow-sm select-bar">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-start">
+                        <div class="select-icon me-3">
+                            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 0C5.243 0 3 2.243 3 5c0 3.75 5 11 5 11s5-7.25 5-11c0-2.757-2.243-5-5-5z" fill="#0d6efd"/></svg>
+                        </div>
+                        <div>
+                            <h5 class="mb-1">Select Barangay</h5>
+                            <div class="text-muted small">Manage youth records by barangay jurisdiction</div>
+                        </div>
+                    </div>
+                    <div style="max-width:520px; width:56%;">
+                        <input id="barangay-search" class="form-control" placeholder="Search barangay..." oninput="filterBarangayGrid(this.value)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3" id="barangay-grid"></div>
+        </div>
+
+        <div id="list-view" style="display:none;">
+            <div class="card shadow">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <button class="btn btn-outline-secondary btn-sm me-3" onclick="showDashboard()">← Back</button>
+                        <h4 class="mb-0" id="current-barangay-title">Barangay Youth</h4>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-secondary me-2" onclick="viewBarangaySummary()">View Summary</button>
+                        <div class="btn-group me-2">
+                            <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown">Download</button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="downloadBarangaySummaryCSV()">Download (Excel)</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="downloadBarangaySummaryPDF()">Download (PDF)</a></li>
+                            </ul>
+                        </div>
+                        <button class="btn btn-primary admin-only" onclick="openModal()">+ Add Youth to this Barangay</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <input type="text" id="searchInput" class="form-control mb-3" placeholder="Search name in this barangay..." onkeyup="filterTable()">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Age</th>
+                                    <th>Sex</th>
+                                    <th>Purok</th>
+                                    <th>Education</th>
+                                    <th class="admin-only">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="youth-data"></tbody>
+                        </table>
+                        <div id="empty-msg" class="text-center text-muted mt-3" style="display:none;">No records found for this Barangay.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="authModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Admin Login</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form onsubmit="handleAuth(event)">
+                        <input type="text" id="auth-username" class="form-control mb-2" placeholder="Username" required>
+                        <input type="password" id="auth-password" class="form-control mb-3" placeholder="Password" required>
+                        <button type="submit" class="btn btn-primary w-100">Login</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="youthModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title">Youth Profile Form</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="youthForm" onsubmit="saveYouth(event)">
+                        <input type="hidden" id="youth-id">
+                        <ul class="nav nav-tabs mb-3" id="formTabs">
+                            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-personal"><img src="/static/images/user-avatar.svg" class="nav-tab-icon" alt="Personal"> Personal</a></li>
+                            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-groups"><img src="/static/images/group-icon.svg" class="nav-tab-icon" alt="Groups"> Groups/Needs</a></li>
+                            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-edu"><img src="/static/images/edu-icon.svg" class="nav-tab-icon" alt="Edu"> Edu & Work</a></li>
+                            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-civic"><img src="/static/images/civic-icon.svg" class="nav-tab-icon" alt="Civic"> Civic & Other</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="tab-personal">
+                                <div class="row g-3">
+                                    <div class="col-12"><label>Full Name</label><input type="text" id="name" class="form-control" required></div>
+                                    <div class="col-md-6"><label>Birthdate</label><input type="date" id="birthdate" class="form-control"></div>
+                                    <div class="col-md-6"><label>Sex</label><select id="sex" class="form-select"><option>Male</option><option>Female</option></select></div>
+                                    <div class="col-md-6"><label>Civil Status</label><select id="civil_status" class="form-select"><option>Single</option><option>Married</option><option>Widowed</option><option>Separated</option><option>Live-in</option></select></div>
+                                    <div class="col-md-6"><label>Religion</label><input type="text" id="religion" class="form-control"></div>
+                                    <h6 class="form-section-title">Address & Contact</h6>
+                                    <div class="col-md-6"><label>Barangay</label><select id="barangay_id" class="form-select bg-light" required readonly style="pointer-events: none;"></select></div>
+                                    <div class="col-md-6"><label>Purok</label><input type="text" id="purok" class="form-control"></div>
+                                    <div class="col-md-6"><label>Municipality</label><input type="text" class="form-control" value="Manolo Fortich" readonly></div>
+                                    <div class="col-md-6"><label>Province</label><input type="text" class="form-control" value="Bukidnon" readonly></div>
+                                    <div class="col-md-6"><label>Email</label><input type="email" id="email" class="form-control"></div>
+                                    <div class="col-md-6"><label>Mobile No.</label><input type="text" id="contact_number" class="form-control"></div>
+                                </div>
+                            </div>
+
+                            <div class="tab-pane fade" id="tab-groups">
+                                <div class="row g-3">
+                                    <h6 class="form-section-title">Youth Classification</h6>
+                                    <div class="col-md-3 form-check ms-3"><input type="checkbox" class="form-check-input" id="is_in_school"> <label for="is_in_school">In School</label></div>
+                                    <div class="col-md-3 form-check"><input type="checkbox" class="form-check-input" id="is_working_youth"> <label for="is_working_youth">Working Youth</label></div>
+                                    <div class="col-12 bg-light p-2 rounded">
+                                        <div class="form-check"><input type="checkbox" class="form-check-input" id="is_osy" onchange="toggleOSY()"> <label for="is_osy"><strong>Out of School Youth (OSY)</strong></label></div>
+                                        <div id="osy-section" class="mt-2 ms-3 d-none">
+                                            <div class="form-check"><input type="checkbox" class="form-check-input" id="osy_willing_to_enroll"> <label for="osy_willing_to_enroll">Willing to enroll?</label></div>
+                                            <div class="row mt-2">
+                                                <div class="col-6"><label>Program:</label><select id="osy_program_type" class="form-select"><option value="">--</option><option>Educational</option><option>Vocational</option></select></div>
+                                                <div class="col-6"><label>Reason if No:</label><input type="text" id="osy_reason_no_enroll" class="form-control"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <h6 class="form-section-title">Special Needs</h6>
+                                    <div class="col-md-6"><div class="form-check"><input type="checkbox" class="form-check-input" id="is_pwd"> <label for="is_pwd">PWD</label></div><input type="text" id="disability_type" class="form-control mt-1" placeholder="Type of Disability"></div>
+                                    <div class="col-md-6"><div class="form-check"><input type="checkbox" class="form-check-input" id="has_specific_needs"> <label for="has_specific_needs">Specific Needs</label></div>
+                                        <select id="specific_needs_condition" class="form-select mt-1"><option value="">None</option><option value="SLD">Specific Learning Disability</option><option value="OHI">Other Hearing Impairment</option><option value="ASD">Autism</option><option value="VI">Visual Impairment</option><option value="HI">Hearing Impairment</option><option value="Deafness">Deafness</option></select>
+                                    </div>
+                                    <h6 class="form-section-title">Cultural Groups</h6>
+                                    <div class="col-md-6"><div class="form-check"><input type="checkbox" class="form-check-input" id="is_ip"> <label for="is_ip">7 Tribes</label></div>
+                                        <select id="tribe_name" class="form-select mt-1"><option value="">-- Select Tribe --</option><option>Higaonon</option><option>Tala-andig</option><option>Bukidnon</option><option>Umayamnon</option><option>Manobo</option><option>Matigsalug</option><option>Tigwahanon</option></select>
+                                    </div>
+                                    <div class="col-md-6"><div class="form-check"><input type="checkbox" class="form-check-input" id="is_muslim"> <label for="is_muslim">Muslim</label></div>
+                                        <select id="muslim_group" class="form-select mt-1"><option value="">-- Select Group --</option><option>Tausug</option><option>Maranao</option><option>Maguindanao</option><option>Yakan</option><option>Sama-bajau</option></select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tab-pane fade" id="tab-edu">
+                                <div class="row g-3">
+                                    <div class="col-md-6"><label>Highest Education</label><select id="education_level" class="form-select"><option>Elementary</option><option>High School</option><option>Senior High</option><option>Open High</option><option>ALS</option><option>College</option><option>Masters</option><option>Doctorate</option></select></div>
+                                    <div class="col-md-6"><label>Course</label><input type="text" id="course" class="form-control"></div>
+                                    <div class="col-12"><label>School/University</label><input type="text" id="school_name" class="form-control"></div>
+                                    <div class="col-12 bg-light p-2 rounded mt-2"><div class="form-check"><input type="checkbox" class="form-check-input" id="is_scholar"> <label for="is_scholar">Scholarship Beneficiary</label></div><input type="text" id="scholarship_program" class="form-control mt-1 ms-3 w-75" placeholder="Name of Program"></div>
+                                    <div class="col-12 mt-3"><label>Work Status</label><input type="text" id="work_status" class="form-control" placeholder="e.g. Employed, Unemployed"></div>
+                                </div>
+                            </div>
+
+                            <div class="tab-pane fade" id="tab-civic">
+                                <div class="row g-3">
+                                    <h6 class="form-section-title">Voter Status</h6>
+                                    <div class="col-md-4 form-check ms-3"><input type="checkbox" class="form-check-input" id="registered_voter_sk"> <label for="registered_voter_sk">SK Voter</label></div>
+                                    <div class="col-md-4 form-check"><input type="checkbox" class="form-check-input" id="registered_voter_national"> <label for="registered_voter_national">National Voter</label></div>
+                                    <div class="col-md-4 form-check"><input type="checkbox" class="form-check-input" id="voted_last_sk"> <label for="voted_last_sk">Voted Last SK?</label></div>
+                                    <h6 class="form-section-title">KK Assembly</h6>
+                                    <div class="col-12"><div class="form-check"><input type="checkbox" class="form-check-input" id="attended_kk_assembly"> <label for="attended_kk_assembly">Attended Assembly?</label></div></div>
+                                    <div class="col-md-6"><label>If Yes, How many times?</label><input type="number" id="kk_assembly_times" class="form-control" min="0"></div>
+                                    <div class="col-md-6"><label>If No, Reason:</label><select id="kk_assembly_no_reason" class="form-select"><option value="">--</option><option>No KK assembly</option><option>No interest</option></select></div>
+                                    <h6 class="form-section-title">Other</h6>
+                                    <div class="col-md-6 form-check ms-3"><input type="checkbox" class="form-check-input" id="is_4ps"> <label for="is_4ps">4Ps Beneficiary</label></div>
+                                    <div class="col-md-6"><label>No. of Children</label><input type="number" id="number_of_children" class="form-control" min="0"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 text-end">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-success px-4">Save Profile</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="summaryModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="summary-title">Youth Profiling</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="summary-content"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="{% static 'script.js' %}"></script>
+
+</body>
+</html>

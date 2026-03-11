@@ -660,6 +660,11 @@ function editYouth(id) {
 
 function saveYouth(e) {
 	e.preventDefault();
+	// Ensure Civic & Other tab is valid before saving
+	if (!validateTab('#tab-civic')) {
+		showModalAlert('Please complete Civic & Other before saving the profile.');
+		return;
+	}
 	const getVal = (id) => document.getElementById(id).value;
 	const getCheck = (id) => document.getElementById(id).checked;
 
@@ -781,44 +786,88 @@ function showModalAlert(msg) {
 
 // Enable/disable other tabs depending on validity of Personal tab
 function updateTabState() {
-	const valid = validatePersonalTab();
+	// Determine sequential validity for tabs: personal -> groups -> edu -> civic
+	const personalValid = validatePersonalTab();
+	const groupsValid = personalValid && isTabValid('#tab-groups');
+	const eduValid = personalValid && groupsValid && isTabValid('#tab-edu');
+	const civicValid = personalValid && groupsValid && eduValid && isTabValid('#tab-civic');
+
 	const tabLinks = document.querySelectorAll('#formTabs a[data-bs-toggle="tab"]');
 	tabLinks.forEach(link => {
 		const href = link.getAttribute('href');
+		// personal always enabled
 		if (href === '#tab-personal') {
 			link.classList.remove('disabled');
 			link.removeAttribute('aria-disabled');
 			link.removeAttribute('data-disabled');
 			return;
 		}
-		if (!valid) {
-			link.classList.add('disabled');
-			link.setAttribute('aria-disabled', 'true');
-			link.setAttribute('data-disabled', 'true');
-		} else {
-			link.classList.remove('disabled');
-			link.removeAttribute('aria-disabled');
-			link.removeAttribute('data-disabled');
+		// groups enabled only after personal
+		if (href === '#tab-groups') {
+			if (!personalValid) {
+				link.classList.add('disabled'); link.setAttribute('aria-disabled','true'); link.setAttribute('data-disabled','true');
+			} else { link.classList.remove('disabled'); link.removeAttribute('aria-disabled'); link.removeAttribute('data-disabled'); }
+			return;
 		}
+		// edu enabled only after groups valid
+		if (href === '#tab-edu') {
+			if (!groupsValid) { link.classList.add('disabled'); link.setAttribute('aria-disabled','true'); link.setAttribute('data-disabled','true'); }
+			else { link.classList.remove('disabled'); link.removeAttribute('aria-disabled'); link.removeAttribute('data-disabled'); }
+			return;
+		}
+		// civic enabled only after edu valid
+		if (href === '#tab-civic') {
+			if (!eduValid) { link.classList.add('disabled'); link.setAttribute('aria-disabled','true'); link.setAttribute('data-disabled','true'); }
+			else { link.classList.remove('disabled'); link.removeAttribute('aria-disabled'); link.removeAttribute('data-disabled'); }
+			return;
+		}
+		// default: enable
+		link.classList.remove('disabled'); link.removeAttribute('aria-disabled'); link.removeAttribute('data-disabled');
 	});
 }
 
-// Initialize tab guards and bind input listeners when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+// Non-intrusive validator that checks required fields but does not call reportValidity() or focus()
+function isTabValid(tabSelector) {
+	if (!tabSelector) return true;
+	const sel = tabSelector.startsWith('#') ? tabSelector : ('#' + tabSelector.replace(/^#/, ''));
+	const container = document.querySelector(sel);
+	if (!container) return true;
+	const requiredElems = container.querySelectorAll('input[required], select[required], textarea[required]');
+	for (const el of requiredElems) {
+		if (el.disabled) continue;
+		if (el.tagName.toLowerCase() === 'select' && !el.value) {
+			if (el.id === 'barangay_id' && currentBarangayId) {
+				try { el.value = currentBarangayId; } catch (e) {}
+			}
+		}
+		if (!el.checkValidity()) return false;
+	}
+	return true;
+}
+
+// Initialize tab guards and bind input listeners (run now or on DOMContentLoaded)
+function initFormNavigation() {
 	const tabLinks = document.querySelectorAll('#formTabs a[data-bs-toggle="tab"]');
 	tabLinks.forEach(link => {
 		link.addEventListener('show.bs.tab', (e) => {
+			const targetHref = link.getAttribute('href');
+			// If nav is disabled, block and show a friendly message depending on target
 			if (link.getAttribute('data-disabled') === 'true') {
 				e.preventDefault();
-				showModalAlert('Please complete Personal information before continuing.');
+				if (targetHref === '#tab-groups') showModalAlert('Please complete Personal information before continuing.');
+				else if (targetHref === '#tab-edu') showModalAlert('Please complete Groups/Needs before continuing.');
+				else if (targetHref === '#tab-civic') showModalAlert('Please complete Edu & Work before continuing.');
+				else showModalAlert('Please complete required fields before continuing.');
 				return;
 			}
+
+			// Prevent leaving if the source tab is invalid; validateTab will report issues to the user
 			const leaving = e.relatedTarget;
-			if (leaving && leaving.getAttribute && leaving.getAttribute('href') === '#tab-personal') {
-				if (!validatePersonalTab()) {
-					e.preventDefault();
-					showModalAlert('Please complete required Personal fields.');
-				}
+			if (leaving && leaving.getAttribute) {
+				const leaveHref = leaving.getAttribute('href');
+				if (leaveHref === '#tab-personal' && !validatePersonalTab()) { e.preventDefault(); showModalAlert('Please complete required Personal fields.'); return; }
+				if (leaveHref === '#tab-groups' && !validateTab('#tab-groups')) { e.preventDefault(); showModalAlert('Please complete required Groups/Needs fields.'); return; }
+				if (leaveHref === '#tab-edu' && !validateTab('#tab-edu')) { e.preventDefault(); showModalAlert('Please complete required Edu & Work fields.'); return; }
 			}
 		});
 		link.addEventListener('click', (ev) => {
@@ -836,12 +885,42 @@ document.addEventListener('DOMContentLoaded', () => {
 		inp.addEventListener('change', updateTabState);
 	});
 
+	// Also watch Groups, Edu, and Civic panes so tab enabling updates live
+	const groupsInputs = document.querySelectorAll('#tab-groups input, #tab-groups select, #tab-groups textarea');
+	groupsInputs.forEach(inp => { inp.addEventListener('input', updateTabState); inp.addEventListener('change', updateTabState); });
+	const eduInputs = document.querySelectorAll('#tab-edu input, #tab-edu select, #tab-edu textarea');
+	eduInputs.forEach(inp => { inp.addEventListener('input', updateTabState); inp.addEventListener('change', updateTabState); });
+	const civicInputs = document.querySelectorAll('#tab-civic input, #tab-civic select, #tab-civic textarea');
+	civicInputs.forEach(inp => { inp.addEventListener('input', updateTabState); inp.addEventListener('change', updateTabState); });
+
 	const youthModal = document.getElementById('youthModal');
 	if (youthModal) youthModal.addEventListener('shown.bs.modal', () => updateTabState());
 
 	// initial evaluation
 	updateTabState();
-});
+
+	// Attach Next/Prev handlers for buttons (in case not already attached)
+	document.querySelectorAll('.btn-next').forEach(btn => {
+		if (!btn._navAttached) {
+			btn.addEventListener('click', (ev) => {
+				const tgt = btn.getAttribute('data-target');
+				if (tgt) nextTab(tgt);
+			});
+			btn._navAttached = true;
+		}
+	});
+	document.querySelectorAll('.btn-prev').forEach(btn => {
+		if (!btn._navAttached) {
+			btn.addEventListener('click', (ev) => {
+				const tgt = btn.getAttribute('data-target');
+				if (tgt) prevTab(tgt);
+			});
+			btn._navAttached = true;
+		}
+	});
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initFormNavigation); else initFormNavigation();
 
 // Generic validator for any tab pane by selector or id (e.g. '#tab-personal')
 function validateTab(tabSelector) {
@@ -869,6 +948,99 @@ function validateTab(tabSelector) {
 			return false;
 		}
 	}
+
+	// Additional custom checks for certain logical groups
+	if (sel === '#tab-groups') {
+		return validateGroupsTab();
+	}
+	if (sel === '#tab-edu') {
+		return validateEduTab();
+	}
+	if (sel === '#tab-civic') {
+		return validateCivicTab();
+	}
+	return true;
+}
+
+// Civic tab validation: enforce KK assembly and 4Ps logic
+function validateCivicTab() {
+	const attended = !!document.getElementById('attended_kk_assembly') && document.getElementById('attended_kk_assembly').checked;
+	const timesEl = document.getElementById('kk_assembly_times');
+	const reasonEl = document.getElementById('kk_assembly_no_reason');
+	const is4ps = !!document.getElementById('is_4ps') && document.getElementById('is_4ps').checked;
+	const numChildrenEl = document.getElementById('number_of_children');
+
+	// Require either attendance info or a reason why not
+	const reasonVal = reasonEl ? String(reasonEl.value || '').trim() : '';
+	if (!attended && reasonVal === '') {
+		showModalAlert('Please indicate whether the youth attended KK Assembly or provide a reason in Civic & Other.');
+		if (reasonEl) reasonEl.focus();
+		return false;
+	}
+
+	// If attended, require a positive number of times
+	if (attended) {
+		const times = timesEl ? parseInt(timesEl.value || 0) : 0;
+		if (!(times > 0)) {
+			showModalAlert('Please enter how many times the youth attended KK Assembly (must be > 0).');
+			if (timesEl) timesEl.focus();
+			return false;
+		}
+	}
+
+	// If 4Ps is checked, require number_of_children > 0
+	if (is4ps) {
+		const n = numChildrenEl ? parseInt(numChildrenEl.value || 0) : 0;
+		if (!(n > 0)) {
+			showModalAlert('Please provide number of children for 4Ps beneficiary in Civic & Other.');
+			if (numChildrenEl) numChildrenEl.focus();
+			return false;
+		}
+	}
+
+	return true;
+}
+
+// Require at least one classification in Groups/Needs and basic OSY fields
+function validateGroupsTab() {
+	const isInSchool = !!document.getElementById('is_in_school') && document.getElementById('is_in_school').checked;
+	const isOsy = !!document.getElementById('is_osy') && document.getElementById('is_osy').checked;
+	const isWorking = !!document.getElementById('is_working_youth') && document.getElementById('is_working_youth').checked;
+
+	if (!isInSchool && !isOsy && !isWorking) {
+		showModalAlert('Please select at least one Youth Classification (In School / OSY / Working) in Groups/Needs.');
+		// focus first checkbox
+		const first = document.getElementById('is_in_school') || document.getElementById('is_osy') || document.getElementById('is_working_youth');
+		if (first) first.focus();
+		return false;
+	}
+
+	// If OSY is checked and willing/enrollment fields are empty, encourage input but don't block save
+	if (isOsy) {
+		const prog = document.getElementById('osy_program_type') && document.getElementById('osy_program_type').value;
+		const reason = document.getElementById('osy_reason_no_enroll') && document.getElementById('osy_reason_no_enroll').value;
+		// not a hard requirement, but if both empty show prompt
+		if (!prog && !reason) {
+			showModalAlert('OSY selected: consider setting Program or Reason fields in Groups/Needs.');
+		}
+	}
+	return true;
+}
+
+// Basic checks for Edu & Work: require education level and work status (non-empty)
+function validateEduTab() {
+	const edu = document.getElementById('education_level');
+	const work = document.getElementById('work_status');
+	if (edu && String(edu.value || '').trim() === '') {
+		showModalAlert('Please select Highest Education in Edu & Work.');
+		try { edu.focus(); } catch (e) {}
+		return false;
+	}
+	if (work && String(work.value || '').trim() === '') {
+		showModalAlert('Please provide Work Status in Edu & Work.');
+		try { work.focus(); } catch (e) {}
+		return false;
+	}
 	return true;
 }
 
@@ -876,20 +1048,27 @@ function validateTab(tabSelector) {
 function nextTab(targetSelector) {
 	// Re-evaluate tab state first
 	updateTabState();
-	// Determine the active pane (safer than relying on nav-link active class)
-	const activePane = document.querySelector('.tab-pane.show.active');
-	const leaving = activePane && ('#' + (activePane.id || ''));
+	// Determine the currently active tab (nav link) and its href
+	const activeLink = document.querySelector('#formTabs a.active');
+	const leaving = activeLink ? (activeLink.getAttribute('href') || '') : '';
 	if (leaving && !validateTab(leaving)) {
-		showModalAlert('Please complete required fields before continuing.');
+		if (leaving === '#tab-personal') showModalAlert('Please complete required Personal fields.');
+		else if (leaving === '#tab-groups') showModalAlert('Please complete required Groups/Needs fields.');
+		else if (leaving === '#tab-edu') showModalAlert('Please complete required Edu & Work fields.');
+		else showModalAlert('Please complete required fields before continuing.');
 		return;
 	}
 
 	const target = document.querySelector(`#formTabs a[href="${targetSelector}"]`);
 	if (!target) return console.warn('nextTab: target not found', targetSelector);
 
-	// If the target is marked disabled via our updateTabState guard, show alert
+	// If the target is marked disabled via our updateTabState guard, show a tailored alert
 	if (target.getAttribute('data-disabled') === 'true') {
-		showModalAlert('Please complete Personal information before continuing.');
+		const tgt = target.getAttribute('href');
+		if (tgt === '#tab-groups') showModalAlert('Please complete Personal information before continuing.');
+		else if (tgt === '#tab-edu') showModalAlert('Please complete Groups/Needs before continuing.');
+		else if (tgt === '#tab-civic') showModalAlert('Please complete Edu & Work before continuing.');
+		else showModalAlert('Please complete required fields before continuing.');
 		return;
 	}
 

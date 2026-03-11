@@ -54,33 +54,75 @@
         </div>
 
         <div class="row g-4">
-            <div class="col-lg-6">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">Responder Type Distribution</h5>
-                        <canvas id="pieChart" height="260"></canvas>
+            <div class="col-lg-8">
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">Responder Type Distribution</h5>
+                                <canvas id="pieChart" height="260"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">22 Barangays - Manolo Fortich, Bukidnon</h5>
+                                <canvas id="topCitiesChart" height="260"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">Demographic Breakdown by Barangay</h5>
+                                <canvas id="avgTimeChart" height="160"></canvas>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-6">
+            <div class="col-lg-4">
                 <div class="card shadow-sm">
                     <div class="card-body">
-                        <h5 class="card-title">22 Barangays - Manolo Fotich, Bukidnon</h5>
-                        <canvas id="topCitiesChart" height="260"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">Average Response Time (minutes)</h5>
-                        <canvas id="avgTimeChart" height="160"></canvas>
+                        <h6 class="card-title">Legend — Barangays</h6>
+                        <div class="legend-list" style="max-height:640px;overflow:auto;font-size:0.95rem;">
+                            <table class="table table-sm table-borderless mb-0" style="font-size:0.95rem;">
+                                <tbody>
+                                    <tr><td style="padding-top:0.4rem;padding-bottom:0.4rem;"><span style="display:inline-block;width:20px;height:14px;background:#1f77b4;margin-right:10px;border-radius:2px;"></span>Agusan Canyon</td></tr>
+                                    <tr><td style="padding-top:0.4rem;padding-bottom:0.4rem;"><span style="display:inline-block;width:20px;height:14px;background:#ff7f0e;margin-right:10px;border-radius:2px;"></span>Alae</td></tr>
+                                    <tr><td style="padding-top:0.4rem;padding-bottom:0.4rem;"><span style="display:inline-block;width:20px;height:14px;background:#2ca02c;margin-right:10px;border-radius:2px;"></span>Dahilayan</td></tr>
+                                    <tr><td style="padding-top:0.4rem;padding-bottom:0.4rem;"><span style="display:inline-block;width:20px;height:14px;background:#d62728;margin-right:10px;border-radius:2px;"></span>Daliig</td></tr>
+                                    <tr><td style="padding-top:0.4rem;padding-bottom:0.4rem;"><span style="display:inline-block;width:20px;height:14px;background:#9467bd;margin-right:10px;border-radius:2px;"></span>Danlag</td></tr>
+                                    <tr><td style="padding-top:0.4rem;padding-bottom:0.4rem;"><span style="display:inline-block;width:20px;height:14px;background:#8c564b;margin-right:10px;border-radius:2px;"></span>Didum</td></tr>
+                                    <tr><td style="padding-top:0.4rem;padding-bottom:0.4rem;"><span style="display:inline-block;width:20px;height:14px;background:#e377c2;margin-right:10px;border-radius:2px;"></span>Gulang-gulang</td></tr>
+                                    <tr><td style="padding-top:0.4rem;padding-bottom:0.4rem;"><span style="display:inline-block;width:20px;height:14px;background:#7f7f7f;margin-right:10px;border-radius:2px;"></span>Kalugmanan</td></tr>
+                                    <tr><td style="padding-top:0.4rem;padding-bottom:0.4rem;"><span style="display:inline-block;width:20px;height:14px;background:#bcbd22;margin-right:10px;border-radius:2px;"></span>Lindaban</td></tr>
+                                    <tr><td style="padding-top:0.4rem;padding-bottom:0.4rem;"><span style="display:inline-block;width:20px;height:14px;background:#17becf;margin-right:10px;border-radius:2px;"></span>Lingion</td></tr>
+                                    <tr><td style="padding-top:0.4rem;padding-bottom:0.4rem;"><span style="display:inline-block;width:20px;height:14px;background:#393b79;margin-right:10px;border-radius:2px;"></span>Luncan</td></tr>
+                                    <tr><td style="padding-top:0.4rem;padding-bottom:0.4rem;"><span style="display:inline-block;width:20px;height:14px;background:#637939;margin-right:10px;border-radius:2px;"></span>Maluko</td></tr>
+                                    <tr><td style="padding-top:0.4rem;padding-bottom:0.4rem;"><span style="display:inline-block;width:20px;height:14px;background:#8c6d31;margin-right:10px;border-radius:2px;"></span>Mambatangan</td></tr>
+                                    <tr><td style="padding-top:0.4rem;padding-bottom:0.4rem;"><span style="display:inline-block;width:20px;height:14px;background:#843c39;margin-right:10px;border-radius:2px;"></span>Mampayag</td></tr>
+                                    <tr><td style="padding-top:0.4rem;padding-bottom:0.4rem;"><span style="display:inline-block;width:20px;height:14px;background:#7b4173;margin-right:10px;border-radius:2px;"></span>Mantibugao</td></tr>
+                                    <tr><td style="padding-top:0.4rem;padding-bottom:0.4rem;"><span style="display:inline-block;width:20px;height:14px;background:#3182bd;margin-right:10px;border-radius:2px;"></span>Minuro</td></tr>
+                                    <tr><td style="padding-top:0.4rem;padding-bottom:0.4rem;"><span style="display:inline-block;width:20px;height:14px;background:#31a354;margin-right:10px;border-radius:2px;"></span>San Miguel</td></tr>
+                                    <tr><td style="padding-top:0.4rem;padding-bottom:0.4rem;"><span style="display:inline-block;width:20px;height:14px;background:#756bb1;margin-right:10px;border-radius:2px;"></span>Sankaran</td></tr>
+                                    <tr><td style="padding-top:0.4rem;padding-bottom:0.4rem;"><span style="display:inline-block;width:20px;height:14px;background:#636363;margin-right:10px;border-radius:2px;"></span>Santiago</td></tr>
+                                    <tr><td style="padding-top:0.4rem;padding-bottom:0.4rem;"><span style="display:inline-block;width:20px;height:14px;background:#e6550d;margin-right:10px;border-radius:2px;"></span>Santo Nino</td></tr>
+                                    <tr><td style="padding-top:0.4rem;padding-bottom:0.4rem;"><span style="display:inline-block;width:20px;height:14px;background:#31a354;margin-right:10px;border-radius:2px;"></span>Tankulan</td></tr>
+                                    <tr><td style="padding-top:0.4rem;padding-bottom:0.4rem;"><span style="display:inline-block;width:20px;height:14px;background:#6baed6;margin-right:10px;border-radius:2px;"></span>Ticala</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Demographic table removed: demographics now rendered into charts (pie + barangay bar chart) -->
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -89,6 +131,7 @@
     <script type="application/json" id="chart-top-cities">{{ top_cities_json|default:"null"|safe }}</script>
     <script type="application/json" id="chart-responder">{{ responder_json|default:"null"|safe }}</script>
     <script type="application/json" id="chart-avg">{{ avg_json|default:"null"|safe }}</script>
+    <script type="application/json" id="chart-demo">{{ demographics_json|default:"null"|safe }}</script>
     <script>
         const serverCities = (function(){ try{ const el=document.getElementById('chart-top-cities'); return el ? JSON.parse(el.textContent) : null;}catch(e){return null;} })();
         const serverResponder = (function(){ try{ const el=document.getElementById('chart-responder'); return el ? JSON.parse(el.textContent) : null;}catch(e){return null;} })();
@@ -112,11 +155,44 @@
 
         async function initCharts() {
             // Try to fetch real data; if not available use placeholders
-            const pieData = serverResponder || await fetchJson('/api/report/responder_types/') || {labels:['Bureau of Fire Protection','Local Gov Unit','Volunteer Fire Brigades','Private'],values:[60,30,6,4]};
-            const cities = serverCities || await fetchJson('/api/report/top_cities/') || {labels:['Taguig','Cebu','Quezon City','Tagbilaran','Makati','Paranaque','Guiguinto','Cainta','Cagayan De Oro','Pasig','Manila','Muntinlupa','Orion','Dasmarinas','Antipolo','Santa Rosa','Malate','Pasay','Hagonoy','Arayat','Zamboanga','Ilagan','Valenzuela','Bacolod','Iloilo','Naga','Lipa','Lapu-Lapu','Marikina','Sagay'], values:[920,380,320,305,280,210,160,150,140,135,120,110,105,100,98,95,90,88,85,82,76,70,68,65,62,60,58,55,50]};
-            const avg = serverAvg || await fetchJson('/api/report/avg_response_time/') || {labels:['Bureau of Fire Protection','Local Gov Unit','Volunteer Fire Brigades','Private'], values:[1200,1400,1700,1500]};
+            const serverPieFallback = {labels:['Bureau of Fire Protection','Local Gov Unit','Volunteer Fire Brigades','Private'],values:[60,30,6,4]};
+            const serverCitiesFallback = {labels:['Taguig','Cebu','Quezon City','Tagbilaran','Makati','Paranaque','Guiguinto','Cainta','Cagayan De Oro','Pasig','Manila','Muntinlupa','Orion','Dasmarinas','Antipolo','Santa Rosa','Malate','Pasay','Hagonoy','Arayat','Zamboanga','Ilagan','Valenzuela','Bacolod','Iloilo','Naga','Lipa','Lapu-Lapu','Marikina','Sagay'], values:[920,380,320,305,280,210,160,150,140,135,120,110,105,100,98,95,90,88,85,82,76,70,68,65,62,60,58,55,50]};
+            const serverAvgFallback = {labels:['Bureau of Fire Protection','Local Gov Unit','Volunteer Fire Brigades','Private'], values:[1200,1400,1700,1500]};
 
-            // PIE
+            let pieData = serverResponder || await fetchJson('/api/report/responder_types/') || serverPieFallback;
+            let cities = serverCities || await fetchJson('/api/report/top_cities/') || serverCitiesFallback;
+            const avg = serverAvg || await fetchJson('/api/report/avg_response_time/') || serverAvgFallback;
+
+            // Use the 22 barangays as the default labels for the top/bar chart.
+            const barangays = [
+                'Agusan Canyon','Alae','Dahilayan','Daliig','Danlag','Didum','Gulang-gulang','Kalugmanan','Lindaban','Lingion','Luncan','Maluko','Mambatangan','Mampayag','Mantibugao','Minuro','San Miguel','Sankaran','Santiago','Santo Nino','Tankulan','Ticala'
+            ];
+
+            // Parse demographics JSON from server; if missing, create a placeholder demoData so
+            // charts still render barangay labels locally for testing.
+            const demoEl = document.getElementById('chart-demo');
+            let demoData = (function(){ try{ return demoEl ? JSON.parse(demoEl.textContent) : null;}catch(e){return null;} })();
+            if (!demoData) {
+                demoData = {};
+                for (const b of barangays) {
+                    demoData[b] = { isy:0, osy:0, yd:0, iy:0, wk:0, uy:0 };
+                }
+            }
+
+            // Build per-barangay totals (sum of all demographic categories)
+            const citiesValues = barangays.map(b => {
+                const d = demoData[b] || {};
+                return ['isy','osy','yd','iy','wk','uy'].reduce((sum,k)=> sum + (Number(d[k]||0)), 0);
+            });
+            cities = { labels: barangays, values: citiesValues };
+
+            // Build pie totals per demographic category across all barangays
+            const catKeys = ['isy','osy','yd','iy','wk','uy'];
+            const catLabels = ['ISY','OSY','YD','IY','WK','UY'];
+            const catTotals = catKeys.map(k => Object.values(demoData).reduce((s,obj)=> s + Number((obj&&obj[k])||0), 0));
+            pieData = { labels: catLabels, values: catTotals };
+
+            // PIE (demographics or responder fallback)
             const pieCtx = document.getElementById('pieChart').getContext('2d');
             new Chart(pieCtx, {
                 type: 'pie',
@@ -124,21 +200,44 @@
                 options: { responsive: true, plugins: {legend:{position:'right'}} }
             });
 
-            // TOP CITIES - horizontal bar
+            // TOP CITIES - horizontal bar (barangay totals when demographics provided)
             const barCtx = document.getElementById('topCitiesChart').getContext('2d');
             new Chart(barCtx, {
                 type: 'bar',
-                data: { labels: cities.labels, datasets:[{label:'Incidents', data: cities.values, backgroundColor: randomColors(cities.labels.length)}] },
+                data: { labels: cities.labels, datasets:[{label:'Count', data: cities.values, backgroundColor: randomColors(cities.labels.length)}] },
                 options: { indexAxis: 'y', responsive:true, scales:{x:{beginAtZero:true}} , plugins:{legend:{display:false}} }
             });
 
-            // AVERAGE TIME - vertical bar
+            // DEMOGRAPHIC BAR - show stacked categories per barangay when demographics provided
             const avgCtx = document.getElementById('avgTimeChart').getContext('2d');
-            new Chart(avgCtx, {
-                type: 'bar',
-                data: { labels: avg.labels, datasets:[{label:'Avg time (min)', data: avg.values.map(v=>Math.round(v/60)), backgroundColor: randomColors(avg.labels.length)}] },
-                options: { responsive:true, scales:{y:{beginAtZero:true, title:{display:true, text:'Minutes'}}}, plugins:{legend:{display:false}} }
-            });
+            if (demoData) {
+                const barangays = cities.labels; // already set to barangays when demoData exists
+                const catKeys = ['isy','osy','yd','iy','wk','uy'];
+                const catLabels = ['ISY','OSY','YD','IY','WK','UY'];
+                const colors = randomColors(catKeys.length);
+                const datasets = catKeys.map((k,i) => ({
+                    label: catLabels[i],
+                    data: barangays.map(b => {
+                        const d = demoData[b] || {};
+                        return Number(d[k]||0);
+                    }),
+                    backgroundColor: colors[i],
+                    stack: 'stack1'
+                }));
+
+                new Chart(avgCtx, {
+                    type: 'bar',
+                    data: { labels: barangays, datasets: datasets },
+                    options: { responsive:true, scales:{x:{stacked:true}, y:{stacked:true, beginAtZero:true, title:{display:true, text:'Count'}}}, plugins:{legend:{display:true, position:'top'}} }
+                });
+            } else {
+                // fallback to previous avg/time chart when demographics not available
+                new Chart(avgCtx, {
+                    type: 'bar',
+                    data: { labels: avg.labels, datasets:[{label:'Avg time (min)', data: avg.values.map(v=>Math.round(v/60)), backgroundColor: randomColors(avg.labels.length)}] },
+                    options: { responsive:true, scales:{y:{beginAtZero:true, title:{display:true, text:'Minutes'}}}, plugins:{legend:{display:false}} }
+                });
+            }
         }
 
         document.addEventListener('DOMContentLoaded', initCharts);

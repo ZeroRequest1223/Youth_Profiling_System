@@ -4,6 +4,10 @@ let isLoggedIn = false;
 let allYouths = [];
 let currentBarangayId = null;
 
+// Safety stubs in case Next/Prev buttons are clicked before script has fully initialized.
+window.nextTab = window.nextTab || function(target) { console.warn('nextTab called before initialization', target); };
+window.prevTab = window.prevTab || function(target) { console.warn('prevTab called before initialization', target); };
+
 // Small helper utilities to reduce repetition
 const $id = id => document.getElementById(id);
 const val = id => ($id(id) && $id(id).value) || '';
@@ -126,7 +130,20 @@ document.addEventListener("DOMContentLoaded", async () => {
 		fetchYouths();
 	}
 	// page-specific UI initialization complete
-	attachAutoToggles();
+	updateTabState();
+	attachAutoToggles(); // Attach Next/Prev handlers for buttons added in HTML (prevents inline onclick errors)
+	document.querySelectorAll('.btn-next').forEach(btn => {
+		btn.addEventListener('click', (ev) => {
+			const tgt = btn.getAttribute('data-target');
+			if (tgt) nextTab(tgt);
+		});
+	});
+	document.querySelectorAll('.btn-prev').forEach(btn => {
+		btn.addEventListener('click', (ev) => {
+			const tgt = btn.getAttribute('data-target');
+			if (tgt) prevTab(tgt);
+		});
+	});
 });
 
 // Attach listeners once to automatically toggle related checkboxes when admin inputs data
@@ -730,6 +747,206 @@ function saveYouth(e) {
 function toggleOSY() {
 	const isOsy = document.getElementById('is_osy').checked;
 	document.getElementById('osy-section').classList.toggle('d-none', !isOsy);
+}
+
+// Validate required fields in the Personal tab
+function validatePersonalTab() {
+	const container = document.getElementById('tab-personal');
+	if (!container) return true;
+	const requiredElems = container.querySelectorAll('input[required], select[required], textarea[required]');
+	for (const el of requiredElems) {
+		if (el.disabled) continue;
+		if (!el.checkValidity()) {
+			try { el.reportValidity(); } catch (e) {}
+			el.focus();
+			return false;
+		}
+	}
+	return true;
+}
+
+// Show temporary alert inside the youth modal (falls back to window.alert)
+function showModalAlert(msg) {
+	const modalBody = document.querySelector('#youthModal .modal-body');
+	if (!modalBody) return alert(msg);
+	const existing = modalBody.querySelector('.temp-modal-alert');
+	if (existing) existing.remove();
+	const el = document.createElement('div');
+	el.className = 'alert alert-warning temp-modal-alert';
+	el.style.marginBottom = '10px';
+	el.textContent = msg;
+	modalBody.insertBefore(el, modalBody.firstChild);
+	setTimeout(() => el.remove(), 3500);
+}
+
+// Enable/disable other tabs depending on validity of Personal tab
+function updateTabState() {
+	const valid = validatePersonalTab();
+	const tabLinks = document.querySelectorAll('#formTabs a[data-bs-toggle="tab"]');
+	tabLinks.forEach(link => {
+		const href = link.getAttribute('href');
+		if (href === '#tab-personal') {
+			link.classList.remove('disabled');
+			link.removeAttribute('aria-disabled');
+			link.removeAttribute('data-disabled');
+			return;
+		}
+		if (!valid) {
+			link.classList.add('disabled');
+			link.setAttribute('aria-disabled', 'true');
+			link.setAttribute('data-disabled', 'true');
+		} else {
+			link.classList.remove('disabled');
+			link.removeAttribute('aria-disabled');
+			link.removeAttribute('data-disabled');
+		}
+	});
+}
+
+// Initialize tab guards and bind input listeners when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+	const tabLinks = document.querySelectorAll('#formTabs a[data-bs-toggle="tab"]');
+	tabLinks.forEach(link => {
+		link.addEventListener('show.bs.tab', (e) => {
+			if (link.getAttribute('data-disabled') === 'true') {
+				e.preventDefault();
+				showModalAlert('Please complete Personal information before continuing.');
+				return;
+			}
+			const leaving = e.relatedTarget;
+			if (leaving && leaving.getAttribute && leaving.getAttribute('href') === '#tab-personal') {
+				if (!validatePersonalTab()) {
+					e.preventDefault();
+					showModalAlert('Please complete required Personal fields.');
+				}
+			}
+		});
+		link.addEventListener('click', (ev) => {
+			if (link.getAttribute('data-disabled') === 'true') {
+				ev.preventDefault();
+				ev.stopPropagation();
+				showModalAlert('Please complete Personal information before continuing.');
+			}
+		});
+	});
+
+	const personalInputs = document.querySelectorAll('#tab-personal input, #tab-personal select, #tab-personal textarea');
+	personalInputs.forEach(inp => {
+		inp.addEventListener('input', updateTabState);
+		inp.addEventListener('change', updateTabState);
+	});
+
+	const youthModal = document.getElementById('youthModal');
+	if (youthModal) youthModal.addEventListener('shown.bs.modal', () => updateTabState());
+
+	// initial evaluation
+	updateTabState();
+});
+
+// Generic validator for any tab pane by selector or id (e.g. '#tab-personal')
+function validateTab(tabSelector) {
+	if (!tabSelector) return true;
+	const sel = tabSelector.startsWith('#') ? tabSelector : ('#' + tabSelector.replace(/^#/, ''));
+	const container = document.querySelector(sel);
+	if (!container) return true;
+	const requiredElems = container.querySelectorAll('input[required], select[required], textarea[required]');
+	for (const el of requiredElems) {
+		if (el.disabled) continue;
+		// Auto-fill barangay if select is required but empty and we have a currentBarangayId
+		if (el.tagName.toLowerCase() === 'select' && !el.value) {
+			if (el.id === 'barangay_id' && currentBarangayId) {
+				try { el.value = currentBarangayId; } catch (e) {}
+			}
+		}
+
+		if (!el.checkValidity()) {
+			// Debug: log which element failed and why (useful during testing)
+			try {
+				console.debug('validateTab failed element:', el.id || el.name || el.tagName, el.checkValidity(), el.validationMessage || 'no message');
+			} catch (err) {}
+			try { el.reportValidity(); } catch (e) {}
+			el.focus();
+			return false;
+		}
+	}
+	return true;
+}
+
+// Move to the next tab if current tab validates
+function nextTab(targetSelector) {
+	// Re-evaluate tab state first
+	updateTabState();
+	// Determine the active pane (safer than relying on nav-link active class)
+	const activePane = document.querySelector('.tab-pane.show.active');
+	const leaving = activePane && ('#' + (activePane.id || ''));
+	if (leaving && !validateTab(leaving)) {
+		showModalAlert('Please complete required fields before continuing.');
+		return;
+	}
+
+	const target = document.querySelector(`#formTabs a[href="${targetSelector}"]`);
+	if (!target) return console.warn('nextTab: target not found', targetSelector);
+
+	// If the target is marked disabled via our updateTabState guard, show alert
+	if (target.getAttribute('data-disabled') === 'true') {
+		showModalAlert('Please complete Personal information before continuing.');
+		return;
+	}
+
+	try {
+		new bootstrap.Tab(target).show();
+		updateTabState();
+		return;
+	} catch (e) {
+		// fallback to click if Tab API fails
+		try { target.click(); updateTabState(); return; } catch (e2) {}
+	}
+
+	// As a last resort, manually activate the tab pane and nav link
+	activateTab(targetSelector);
+}
+
+function prevTab(targetSelector) {
+	const target = document.querySelector(`#formTabs a[href="${targetSelector}"]`);
+	if (!target) return console.warn('prevTab: target not found', targetSelector);
+	try { new bootstrap.Tab(target).show(); updateTabState(); return; } catch (e) {
+		try { target.click(); updateTabState(); return; } catch (e2) {}
+	}
+	activateTab(targetSelector);
+}
+
+// Expose navigation helpers to global scope for onclick handlers
+window.nextTab = nextTab;
+window.prevTab = prevTab;
+
+// Manually activate a tab/pane without relying on Bootstrap API (robust fallback)
+function activateTab(targetSelector) {
+	const link = document.querySelector(`#formTabs a[href="${targetSelector}"]`);
+	const pane = document.querySelector(targetSelector);
+	if (!link || !pane) return console.warn('activateTab: missing link or pane', targetSelector, link, pane);
+
+	// deactivate all nav links
+	document.querySelectorAll('#formTabs a[data-bs-toggle="tab"]').forEach(a => {
+		a.classList.remove('active');
+		a.setAttribute('aria-selected', 'false');
+	});
+
+	// hide all panes
+	document.querySelectorAll('.tab-pane').forEach(p => {
+		p.classList.remove('show');
+		p.classList.remove('active');
+		p.setAttribute('aria-hidden', 'true');
+	});
+
+	// activate requested
+	link.classList.add('active');
+	link.setAttribute('aria-selected', 'true');
+	pane.classList.add('show');
+	pane.classList.add('active');
+	pane.setAttribute('aria-hidden', 'false');
+
+	// re-evaluate tab guards
+	updateTabState();
 }
 
 // Sidebar open/close helpers used by the menu button and overlay

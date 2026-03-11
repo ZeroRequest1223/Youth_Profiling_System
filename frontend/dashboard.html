@@ -228,6 +228,10 @@
                                     <div class="col-md-6"><label>Email</label><input type="email" id="email" class="form-control"></div>
                                     <div class="col-md-6"><label>Mobile No.</label><input type="text" id="contact_number" class="form-control"></div>
                                 </div>
+                                <div class="mt-3 text-end">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    <button type="button" class="btn btn-primary btn-next" data-target="#tab-groups">Next</button>
+                                </div>
                             </div>
 
                             <div class="tab-pane fade" id="tab-groups">
@@ -258,6 +262,10 @@
                                         <select id="muslim_group" class="form-select mt-1"><option value="">-- Select Group --</option><option>Tausug</option><option>Maranao</option><option>Maguindanao</option><option>Yakan</option><option>Sama-bajau</option></select>
                                     </div>
                                 </div>
+                                <div class="mt-3 text-end">
+                                    <button type="button" class="btn btn-secondary btn-prev" data-target="#tab-personal">Back</button>
+                                    <button type="button" class="btn btn-primary btn-next" data-target="#tab-edu">Next</button>
+                                </div>
                             </div>
 
                             <div class="tab-pane fade" id="tab-edu">
@@ -267,6 +275,10 @@
                                     <div class="col-12"><label>School/University</label><input type="text" id="school_name" class="form-control"></div>
                                     <div class="col-12 bg-light p-2 rounded mt-2"><div class="form-check"><input type="checkbox" class="form-check-input" id="is_scholar"> <label for="is_scholar">Scholarship Beneficiary</label></div><input type="text" id="scholarship_program" class="form-control mt-1 ms-3 w-75" placeholder="Name of Program"></div>
                                     <div class="col-12 mt-3"><label>Work Status</label><input type="text" id="work_status" class="form-control" placeholder="e.g. Employed, Unemployed"></div>
+                                </div>
+                                <div class="mt-3 text-end">
+                                    <button type="button" class="btn btn-secondary btn-prev" data-target="#tab-groups">Back</button>
+                                    <button type="button" class="btn btn-primary btn-next" data-target="#tab-civic">Next</button>
                                 </div>
                             </div>
 
@@ -284,13 +296,14 @@
                                     <div class="col-md-6 form-check ms-3"><input type="checkbox" class="form-check-input" id="is_4ps"> <label for="is_4ps">4Ps Beneficiary</label></div>
                                     <div class="col-md-6"><label>No. of Children</label><input type="number" id="number_of_children" class="form-control" min="0"></div>
                                 </div>
+                                <div class="mt-3 text-end">
+                                    <button type="button" class="btn btn-secondary btn-prev" data-target="#tab-edu">Back</button>
+                                    <button type="submit" class="btn btn-success px-4">Save Profile</button>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="mt-4 texbt-end">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-success px-4">Save Profile</button>
-                        </div>
+                        <!-- Per-tab navigation buttons: Next/Back on first three, Save on last tab -->
                     </form>
                 </div>
             </div>

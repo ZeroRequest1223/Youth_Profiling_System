@@ -732,6 +732,97 @@ function toggleOSY() {
 	document.getElementById('osy-section').classList.toggle('d-none', !isOsy);
 }
 
+// Sidebar open/close helpers used by the menu button and overlay
+function openSidebar() {
+	const menu = document.getElementById('side-menu');
+	const overlay = document.getElementById('side-overlay');
+	if (menu) {
+		// Position the menu so it appears to pop out from the menu button
+		const btn = document.getElementById('menu-toggle');
+		if (btn) {
+			const rect = btn.getBoundingClientRect();
+			// place left edge of menu at the button's left coordinate (clamped to >= 0)
+			const leftPos = Math.max(0, Math.round(rect.left));
+			menu.style.left = leftPos + 'px';
+		} else {
+			menu.style.left = '';
+		}
+		menu.classList.add('open');
+		menu.setAttribute('aria-hidden', 'false');
+	}
+	if (overlay) {
+		overlay.classList.add('show');
+		overlay.setAttribute('aria-hidden', 'false');
+	}
+	document.body.classList.add('side-open');
+}
+
+function closeSidebar() {
+	const menu = document.getElementById('side-menu');
+	const overlay = document.getElementById('side-overlay');
+	if (menu) {
+		menu.classList.remove('open');
+		menu.setAttribute('aria-hidden', 'true');
+		// clear any inline positioning applied when opening
+		menu.style.left = '';
+	}
+	if (overlay) {
+		overlay.classList.remove('show');
+		overlay.setAttribute('aria-hidden', 'true');
+	}
+	document.body.classList.remove('side-open');
+}
+
+function toggleSidebar() {
+	const menu = document.getElementById('side-menu');
+	if (!menu) return;
+	if (menu.classList.contains('open')) closeSidebar(); else openSidebar();
+}
+
+// Close sidebar when pressing Escape for improved accessibility
+document.addEventListener('keydown', (e) => {
+	if (e.key === 'Escape') {
+		const menu = document.getElementById('side-menu');
+		if (menu && menu.classList.contains('open')) closeSidebar();
+	}
+});
+
+// Hover open/close behavior: only enable on non-touch devices that support hover
+let sidebarHoverTimer = null;
+const HOVER_OPEN_DELAY = 120; // ms
+const HOVER_CLOSE_DELAY = 300; // ms
+const SUPPORTS_HOVER = (window.matchMedia && window.matchMedia('(hover: hover)').matches) && !('ontouchstart' in window);
+
+function enableSidebarHover() {
+	if (!SUPPORTS_HOVER) return;
+	const btn = document.getElementById('menu-toggle');
+	const menu = document.getElementById('side-menu');
+	if (!btn || !menu) return;
+
+	btn.addEventListener('mouseenter', () => {
+		if (sidebarHoverTimer) { clearTimeout(sidebarHoverTimer); sidebarHoverTimer = null; }
+		sidebarHoverTimer = setTimeout(() => { openSidebar(); sidebarHoverTimer = null; }, HOVER_OPEN_DELAY);
+	});
+
+	btn.addEventListener('mouseleave', () => {
+		if (sidebarHoverTimer) { clearTimeout(sidebarHoverTimer); sidebarHoverTimer = null; }
+		sidebarHoverTimer = setTimeout(() => { closeSidebar(); sidebarHoverTimer = null; }, HOVER_CLOSE_DELAY);
+	});
+
+	// Keep menu open while hovering over it
+	menu.addEventListener('mouseenter', () => {
+		if (sidebarHoverTimer) { clearTimeout(sidebarHoverTimer); sidebarHoverTimer = null; }
+	});
+
+	menu.addEventListener('mouseleave', () => {
+		if (sidebarHoverTimer) { clearTimeout(sidebarHoverTimer); }
+		sidebarHoverTimer = setTimeout(() => { closeSidebar(); sidebarHoverTimer = null; }, HOVER_CLOSE_DELAY);
+	});
+}
+
+// Enable hover behavior once DOM is ready (safe to add multiple listeners)
+document.addEventListener('DOMContentLoaded', enableSidebarHover);
+
 function deleteYouth(id) {
 	const y = getYouthById(id);
 	if (!y) return;

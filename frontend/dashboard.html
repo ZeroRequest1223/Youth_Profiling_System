@@ -27,24 +27,22 @@
 <body class="bg-light">
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 sticky-top">
-        <div class="container d-flex align-items-center">
-            <button id="menu-toggle" class="btn btn-light btn-sm" onclick="toggleSidebar()" aria-label="Toggle menu">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M3 12h18M3 18h18" stroke="#0d6efd" stroke-width="2" stroke-linecap="round"/></svg>
-            </button>
-            <a class="navbar-brand d-flex align-items-center ms-2" href="#" onclick="showDashboard()">
-                <img src="{% static 'images/logo.png' %}" id="dashboard-logo" class="nav-icon me-2" alt="logo" style="height:55px; width:auto;">
-                <div class="d-flex flex-column">
-                    <span class="fw-bold">LYDO Youth Profiling</span>
-                    <small class="text-white-50">Manolo Fortich, Bukidnon</small>
-                </div>
-            </a>
-                <div class="d-flex text-white align-items-center">
-                <span id="user-display" class="me-3" style="display:none;">Admin: <b id="username-span"></b></span>
-                
-                <button id="logout-btn" class="btn btn-danger btn-sm" onclick="logout()" style="display:none;">Logout</button>
+    <div class="container-fluid d-flex align-items-center">
+        
+        <button id="menu-toggle" class="btn btn-light btn-sm me-3" onclick="toggleSidebar()">
+            ☰ Menu
+        </button>
+
+        <a class="navbar-brand d-flex align-items-center" href="/">
+            <img src="{% static 'images/logo.png' %}" class="nav-icon me-2" alt="logo" style="height:55px;width:auto;">
+            <div class="d-flex flex-column">
+                <span class="fw-bold">LYDO Youth Profiling</span>
+                <small class="text-white-50">Manolo Fortich, Bukidnon</small>
             </div>
+        </a>
+        
         </div>
-    </nav>
+</nav>
 
     <!-- Left side collapsible menu and overlay -->
     <div id="side-menu" class="side-menu" aria-hidden="true">
@@ -283,7 +281,7 @@
                             </div>
                         </div>
 
-                        <div class="mt-4 text-end">
+                        <div class="mt-4 texbt-end">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                             <button type="submit" class="btn btn-success px-4">Save Profile</button>
                         </div>

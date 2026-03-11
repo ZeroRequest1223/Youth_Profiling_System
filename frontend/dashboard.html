@@ -26,22 +26,28 @@
 </head>
 <body class="bg-light">
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 sticky-top">
+   <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 sticky-top">
     <div class="container-fluid d-flex align-items-center">
         
         <button id="menu-toggle" class="btn btn-light btn-sm me-3" onclick="toggleSidebar()">
             ☰ Menu
         </button>
 
-        <a class="navbar-brand d-flex align-items-center" href="/">
-            <img src="{% static 'images/logo.png' %}" class="nav-icon me-2" alt="logo" style="height:55px;width:auto;">
+        <a class="navbar-brand d-flex align-items-center" href="#" onclick="showDashboard()">
+            <img src="{% static 'images/logo.png' %}" id="dashboard-logo" class="nav-icon me-2" alt="logo" style="height:55px; width:auto;">
             <div class="d-flex flex-column">
                 <span class="fw-bold">LYDO Youth Profiling</span>
                 <small class="text-white-50">Manolo Fortich, Bukidnon</small>
             </div>
         </a>
         
+        <div class="d-flex text-white align-items-center ms-auto">
+            <span id="user-display" class="me-3" style="display:none;">Admin: <b id="username-span"></b></span>
+            
+            <button id="logout-btn" class="btn btn-danger btn-sm" onclick="logout()">Logout</button>
         </div>
+        
+    </div>
 </nav>
 
     <!-- Left side collapsible menu and overlay -->

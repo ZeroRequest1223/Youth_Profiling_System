@@ -239,6 +239,9 @@
                                     <h6 class="form-section-title">Youth Classification</h6>
                                     <div class="col-md-3 form-check ms-3"><input type="checkbox" class="form-check-input" id="is_in_school"> <label for="is_in_school">In School</label></div>
                                     <div class="col-md-3 form-check"><input type="checkbox" class="form-check-input" id="is_working_youth"> <label for="is_working_youth">Working Youth</label></div>
+                                    <div class="col-md-3 form-check"><input type="checkbox" class="form-check-input" id="is_unemployed"> <label for="is_unemployed">Unemployed Youth</label></div>
+                                    <div class="col-md-3 form-check"><input type="checkbox" class="form-check-input" id="is_pwd"> <label for="is_pwd">Youth with Disability (PWD)</label></div>
+                                    <div class="col-md-3 form-check"><input type="checkbox" class="form-check-input" id="is_ip"> <label for="is_ip">IP Youth (IP)</label></div>
                                     <div class="col-12 bg-light p-2 rounded">
                                         <div class="form-check"><input type="checkbox" class="form-check-input" id="is_osy" onchange="toggleOSY()"> <label for="is_osy"><strong>Out of School Youth (OSY)</strong></label></div>
                                         <div id="osy-section" class="mt-2 ms-3 d-none">
@@ -250,12 +253,12 @@
                                         </div>
                                     </div>
                                     <h6 class="form-section-title">Special Needs</h6>
-                                    <div class="col-md-6"><div class="form-check"><input type="checkbox" class="form-check-input" id="is_pwd"> <label for="is_pwd">PWD</label></div><input type="text" id="disability_type" class="form-control mt-1" placeholder="Type of Disability"></div>
+                                    <div class="col-md-6"><label>Type of Disability</label><input type="text" id="disability_type" class="form-control mt-1" placeholder="Type of Disability"></div>
                                     <div class="col-md-6"><div class="form-check"><input type="checkbox" class="form-check-input" id="has_specific_needs"> <label for="has_specific_needs">Specific Needs</label></div>
                                         <select id="specific_needs_condition" class="form-select mt-1"><option value="">None</option><option value="SLD">Specific Learning Disability</option><option value="OHI">Other Hearing Impairment</option><option value="ASD">Autism</option><option value="VI">Visual Impairment</option><option value="HI">Hearing Impairment</option><option value="Deafness">Deafness</option></select>
                                     </div>
                                     <h6 class="form-section-title">Cultural Groups</h6>
-                                    <div class="col-md-6"><div class="form-check"><input type="checkbox" class="form-check-input" id="is_ip"> <label for="is_ip">7 Tribes</label></div>
+                                    <div class="col-md-6"><label>7 Tribes (select if applicable)</label>
                                         <select id="tribe_name" class="form-select mt-1"><option value="">-- Select Tribe --</option><option>Higaonon</option><option>Tala-andig</option><option>Bukidnon</option><option>Umayamnon</option><option>Manobo</option><option>Matigsalug</option><option>Tigwahanon</option></select>
                                     </div>
                                     <div class="col-md-6"><div class="form-check"><input type="checkbox" class="form-check-input" id="is_muslim"> <label for="is_muslim">Muslim</label></div>

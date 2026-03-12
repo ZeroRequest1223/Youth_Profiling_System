@@ -33,6 +33,7 @@ class Youth(models.Model):
     is_osy = models.BooleanField(default=False, verbose_name="Out of School Youth")
     is_working_youth = models.BooleanField(default=False, verbose_name="Working Youth")
     is_pwd = models.BooleanField(default=False, verbose_name="Person with Disability")
+    is_unemployed = models.BooleanField(default=False, verbose_name="Unemployed Youth")
     
     # OSY Specifics
     osy_willing_to_enroll = models.BooleanField(default=False, verbose_name="Willing to enroll?")

@@ -93,10 +93,16 @@ def barangay_summary(request, bid):
     # Compute age counts by Python to avoid complex DB functions
     age_counts = {}
     import datetime
+    # counters for age-range and sex-specific special counts
+    age_15_30_male = 0
+    age_15_30_female = 0
     # Also compute per-age breakdowns for sex, civil status, and education to support table layout
     sex_by_age = {}
     civil_by_age = {}
     edu_by_age = {}
+    # per-age per-category sex breakdowns for PDF table
+    age_category_table = {}
+    categories = ['in_school','osy','pwd','ip','working','unemployed']
     for y in youths:
         a = y.age
         age_counts[str(a)] = age_counts.get(str(a), 0) + 1
@@ -116,6 +122,42 @@ def barangay_summary(request, bid):
         edu_by_age.setdefault(ed, {})
         edu_by_age[ed][str(a)] = edu_by_age[ed].get(str(a), 0) + 1
 
+        # Age-range counters for 15-30 by sex
+        try:
+            if a is not None and 15 <= int(a) <= 30:
+                if s == 'Male':
+                    age_15_30_male += 1
+                elif s == 'Female':
+                    age_15_30_female += 1
+        except Exception:
+            pass
+
+        # per-age category breakdowns
+        age_key = str(a)
+        if age_key not in age_category_table:
+            age_category_table[age_key] = {c: {'male':0, 'female':0, 'total':0} for c in categories}
+        # helper: inc category counters
+        def inc_cat(cat, sex):
+            rec = age_category_table[age_key][cat]
+            if sex == 'Male':
+                rec['male'] += 1
+            elif sex == 'Female':
+                rec['female'] += 1
+            rec['total'] += 1
+
+        if y.is_in_school:
+            inc_cat('in_school', s)
+        if y.is_osy:
+            inc_cat('osy', s)
+        if y.is_pwd:
+            inc_cat('pwd', s)
+        if y.is_ip:
+            inc_cat('ip', s)
+        if y.is_working_youth:
+            inc_cat('working', s)
+        if getattr(y, 'is_unemployed', False):
+            inc_cat('unemployed', s)
+
     # Civil status counts
     civil_counts = youths.values('civil_status').annotate(count=Count('id'))
 
@@ -130,6 +172,25 @@ def barangay_summary(request, bid):
     osy_male = youths.filter(is_osy=True, sex='Male').count()
     osy_female = youths.filter(is_osy=True, sex='Female').count()
 
+    # Working youth counts
+    working_male = youths.filter(is_working_youth=True, sex='Male').count()
+    working_female = youths.filter(is_working_youth=True, sex='Female').count()
+    working_total = youths.filter(is_working_youth=True).count()
+
+    # Unemployed youth counts (model field `is_unemployed`)
+    unemployed_male = youths.filter(is_unemployed=True, sex='Male').count()
+    unemployed_female = youths.filter(is_unemployed=True, sex='Female').count()
+    unemployed_total = youths.filter(is_unemployed=True).count()
+
+    # PWD split by sex
+    pwd_male = youths.filter(is_pwd=True, sex='Male').count()
+    pwd_female = youths.filter(is_pwd=True, sex='Female').count()
+
+    # IP split by sex
+    ip_male = youths.filter(is_ip=True, sex='Male').count()
+    ip_female = youths.filter(is_ip=True, sex='Female').count()
+    ip_total = youths.filter(is_ip=True).count()
+
     data = {
         'barangay_id': barangay.id,
         'barangay_name': barangay.name,
@@ -141,11 +202,25 @@ def barangay_summary(request, bid):
         'civil_by_age': civil_by_age,
         'education': {item['education_level'] or 'Unknown': item['count'] for item in edu_counts},
         'education_by_age': edu_by_age,
+        'age_category_table': age_category_table,
         'pwd': pwd,
+        'pwd_male': pwd_male,
+        'pwd_female': pwd_female,
         'fourps': fourps,
         'osy': osy,
         'osy_male': osy_male,
         'osy_female': osy_female,
+        'working_male': working_male,
+        'working_female': working_female,
+        'working_total': working_total,
+        'unemployed_male': unemployed_male,
+        'unemployed_female': unemployed_female,
+        'unemployed_total': unemployed_total,
+        'ip_male': ip_male,
+        'ip_female': ip_female,
+        'ip_total': ip_total,
+        'age_15_30_male': age_15_30_male,
+        'age_15_30_female': age_15_30_female,
     }
     return JsonResponse(data)
 
@@ -286,6 +361,7 @@ def youth_api(request):
                     'osy_reason_no_enroll': y.osy_reason_no_enroll,
                     'is_working_youth': y.is_working_youth,
                     'is_pwd': y.is_pwd,
+                    'is_unemployed': y.is_unemployed,
                     'disability_type': y.disability_type,
                     'has_specific_needs': y.has_specific_needs,
                     'specific_needs_condition': y.specific_needs_condition,
@@ -346,6 +422,7 @@ def youth_api(request):
                 'osy_reason_no_enroll': data.get('osy_reason_no_enroll'),
                 'is_working_youth': get_bool('is_working_youth'),
                 'is_pwd': get_bool('is_pwd'),
+                'is_unemployed': get_bool('is_unemployed'),
                 'disability_type': data.get('disability_type'),
                 'has_specific_needs': get_bool('has_specific_needs'),
                 'specific_needs_condition': data.get('specific_needs_condition'),

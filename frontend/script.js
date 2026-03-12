@@ -97,17 +97,65 @@ function buildSummaryRows(data) {
 	rows.push([]);
 
 	// SPECIAL COUNTS
+	// SPECIAL COUNTS — include per-age male/female/total where available
 	rows.push(['SPECIAL COUNTS', ...ageCols.map(()=>''), '']);
-	rows.push(['PWD', ...ageCols.map(()=>''), (data.pwd ?? 0)]);
-	rows.push(['4Ps', ...ageCols.map(()=>''), (data.fourps ?? 0)]);
 
-	// OSY split by sex where available
-	const osyMale = (data.osy_male != null) ? data.osy_male : null;
-	const osyFemale = (data.osy_female != null) ? data.osy_female : null;
-	const osyTotal = (data.osy != null) ? data.osy : ((osyMale != null && osyFemale != null) ? (osyMale + osyFemale) : 0);
-	rows.push(['OSY - Male', ...ageCols.map(()=>''), (osyMale ?? '')]);
-	rows.push(['OSY - Female', ...ageCols.map(()=>''), (osyFemale ?? '')]);
-	rows.push(['OSY (Total)', ...ageCols.map(()=>''), osyTotal]);
+	const ageTable = data.age_category_table || {};
+	const getAgeCatVal = (age, cat, field) => {
+		if (!ageTable || !ageTable[age] || !ageTable[age][cat]) return 0;
+		const v = ageTable[age][cat];
+		if (field) return Number(v[field] || 0);
+		return Number(v.total || 0);
+	};
+
+	const pushCatRows = (label, catKey, totalField) => {
+		// Male
+		const maleRow = [label + ' — Male', ...ageCols.map(a => getAgeCatVal(a, catKey, 'male'))];
+		const maleTotal = (data[totalField + '_male'] != null) ? data[totalField + '_male'] : maleRow.slice(1).reduce((s,v)=>s+Number(v),0);
+		maleRow.push(maleTotal);
+		rows.push(maleRow);
+
+		// Female
+		const femaleRow = [label + ' — Female', ...ageCols.map(a => getAgeCatVal(a, catKey, 'female'))];
+		const femaleTotal = (data[totalField + '_female'] != null) ? data[totalField + '_female'] : femaleRow.slice(1).reduce((s,v)=>s+Number(v),0);
+		femaleRow.push(femaleTotal);
+		rows.push(femaleRow);
+
+		// Total
+		const totalRow = [label + ' (Total)', ...ageCols.map(a => getAgeCatVal(a, catKey, 'total') || (getAgeCatVal(a, catKey, 'male') + getAgeCatVal(a, catKey, 'female')) )];
+		const totalTotal = (data[totalField] != null) ? data[totalField] : totalRow.slice(1).reduce((s,v)=>s+Number(v),0);
+		totalRow.push(totalTotal);
+		rows.push(totalRow);
+	};
+
+	// PWD
+	pushCatRows('PWD', 'pwd', 'pwd');
+
+	// 4Ps (no per-age breakdown available in age_table, keep as single row)
+	rows.push(['4Ps', ...ageCols.map(()=>0), (data.fourps ?? 0)]);
+
+	// OSY
+	pushCatRows('OSY', 'osy', 'osy');
+
+	// Working youth
+	pushCatRows('Working', 'working', 'working');
+
+	// Unemployed youth
+	pushCatRows('Unemployed', 'unemployed', 'unemployed');
+
+	// IP youth
+	pushCatRows('IP', 'ip', 'ip');
+
+	// Age 15-30 totals by sex (show per-age breakdown using sex_by_age if available)
+	const maleByAge = sexByAge['Male'] || {};
+	const femaleByAge = sexByAge['Female'] || {};
+	const age15_30_male_row = ['Age 15–30 — Male', ...ageCols.map(a => Number(maleByAge[a] || 0))];
+	age15_30_male_row.push((data.age_15_30_male != null) ? data.age_15_30_male : age15_30_male_row.slice(1).reduce((s,v)=>s+Number(v),0));
+	rows.push(age15_30_male_row);
+
+	const age15_30_female_row = ['Age 15–30 — Female', ...ageCols.map(a => Number(femaleByAge[a] || 0))];
+	age15_30_female_row.push((data.age_15_30_female != null) ? data.age_15_30_female : age15_30_female_row.slice(1).reduce((s,v)=>s+Number(v),0));
+	rows.push(age15_30_female_row);
 
 	return { ageCols, rows };
 }
@@ -328,11 +376,21 @@ function viewBarangaySummary() {
 			<div class="mt-3">
 				<p><strong>Special counts:</strong></p>
 				<ul>
-					<li>PWD: <strong>${data.pwd ?? 0}</strong></li>
+					<li>PWD — Male: <strong>${data.pwd_male ?? 0}</strong></li>
+					<li>PWD — Female: <strong>${data.pwd_female ?? 0}</strong></li>
+					<li>PWD (Total): <strong>${data.pwd ?? 0}</strong></li>
 					<li>4Ps: <strong>${data.fourps ?? 0}</strong></li>
-					<li>OSY — Male: <strong>${data.osy_male ?? 0}</strong></li>
-					<li>OSY — Female: <strong>${data.osy_female ?? 0}</strong></li>
-					<li>OSY (Total): <strong>${(data.osy != null) ? data.osy : ((data.osy_male ?? 0) + (data.osy_female ?? 0))}</strong></li>
+					<li>Working — Male: <strong>${data.working_male ?? 0}</strong></li>
+					<li>Working — Female: <strong>${data.working_female ?? 0}</strong></li>
+					<li>Working (Total): <strong>${data.working_total ?? ((data.working_male??0)+(data.working_female??0))}</strong></li>
+					<li>Unemployed — Male: <strong>${data.unemployed_male ?? 0}</strong></li>
+					<li>Unemployed — Female: <strong>${data.unemployed_female ?? 0}</strong></li>
+					<li>Unemployed (Total): <strong>${data.unemployed_total ?? ((data.unemployed_male??0)+(data.unemployed_female??0))}</strong></li>
+					<li>IP — Male: <strong>${data.ip_male ?? 0}</strong></li>
+					<li>IP — Female: <strong>${data.ip_female ?? 0}</strong></li>
+					<li>IP (Total): <strong>${data.ip_total ?? ((data.ip_male??0)+(data.ip_female??0))}</strong></li>
+					<li>Age 15–30 — Male: <strong>${data.age_15_30_male ?? 0}</strong></li>
+					<li>Age 15–30 — Female: <strong>${data.age_15_30_female ?? 0}</strong></li>
 				</ul>
 			</div>
 		`;
@@ -360,42 +418,44 @@ function downloadBarangaySummaryPDF() {
 			const jsPDF = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : (window.jsPDF || null);
 			if (!jsPDF) return alert('PDF library not loaded');
 
-			const { ageCols, rows: body } = buildSummaryRows(data);
-			const head = ['DEMOGRAPHICS', ...ageCols, 'TOTAL'];
-
-			// Build PDF with header that resembles the printed form
 			const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
 			if (typeof doc.autoTable !== 'function') return alert('jsPDF AutoTable plugin not loaded');
 			const pageWidth = doc.internal.pageSize.getWidth();
 			let startY = 40;
 
 			doc.setFontSize(10);
-			doc.text('Republic of the Philippines', pageWidth/2, startY, { align: 'center' }); startY += 14;
-			doc.text('Province of Bukidnon', pageWidth/2, startY, { align: 'center' }); startY += 14;
-			doc.text('Municipality of Manolo Fortich', pageWidth/2, startY, { align: 'center' }); startY += 28;
+			doc.text('Republic of the Philippines', pageWidth / 2, startY, { align: 'center' }); startY += 14;
+			doc.text('Province of Bukidnon', pageWidth / 2, startY, { align: 'center' }); startY += 14;
+			doc.text('Municipality of Manolo Fortich', pageWidth / 2, startY, { align: 'center' }); startY += 28;
 			doc.setFontSize(16);
-			doc.text((data.barangay_name || 'BARANGAY').toUpperCase(), pageWidth/2, startY, { align: 'center' }); startY += 20;
+			doc.text((data.barangay_name || 'BARANGAY').toUpperCase(), pageWidth / 2, startY, { align: 'center' }); startY += 20;
 			doc.setFontSize(12);
-			doc.text('OFFICE OF THE SANGGUNIANG KABATAAN', pageWidth/2, startY, { align: 'center' }); startY += 16;
+			doc.text('OFFICE OF THE SANGGUNIANG KABATAAN', pageWidth / 2, startY, { align: 'center' }); startY += 16;
 			doc.setFontSize(13);
-			doc.text('SUMMARY OF KATIPUNAN NG KABATAAN (KK) PROFILING', pageWidth/2, startY, { align: 'center' }); startY += 18;
+			doc.text('SUMMARY OF KATIPUNAN NG KABATAAN (KK) PROFILING', pageWidth / 2, startY, { align: 'center' }); startY += 18;
 
-			// small descriptive paragraph (shortened) under header
+			// small descriptive paragraph under header
 			doc.setFontSize(9);
 			const para = 'Section 5(b) of the Implementing Rules and Regulations (IRR) of RA No. 10742 states that the Katipunan ng Kabataan (KK) shall serve as the highest policymaking body to decide on matters affecting the youth in the barangay.';
 			const split = doc.splitTextToSize(para, pageWidth - 80);
 			doc.text(split, 40, startY); startY += split.length * 10 + 6;
 
-			// Determine colors from CSS variables (fallbacks provided)
-			const headerColor = cssVarRgb('--pdf-header', [0,123,67]);
-			const rowColor = cssVarRgb('--pdf-row', [240,250,240]);
-			const firstColColor = cssVarRgb('--pdf-firstcol', [0,86,63]);
-			const borderColor = cssVarRgb('--pdf-border', [150,150,150]);
+			// Use buildSummaryRows to construct a stable table body
+			const { rows } = buildSummaryRows(data);
+			if (!rows || rows.length === 0) return alert('No summary data to print');
 
-			// Render autoTable with green styling to resemble the printed form
+			// First row is the header
+			const head = [rows[0]];
+			const body = rows.slice(1);
+
+			// Colors
+			const headerColor = cssVarRgb('--pdf-header', [0, 123, 67]);
+			const rowColor = cssVarRgb('--pdf-row', [240, 250, 240]);
+			const borderColor = cssVarRgb('--pdf-border', [150, 150, 150]);
+
 			doc.autoTable({
 				startY: startY,
-				head: [head],
+				head: head,
 				body: body,
 				theme: 'grid',
 				tableWidth: 'auto',
@@ -414,25 +474,10 @@ function downloadBarangaySummaryPDF() {
 				alternateRowStyles: { fillColor: rowColor },
 				tableLineColor: borderColor,
 				tableLineWidth: 0.4,
-				columnStyles: {
-					0: { cellWidth: 140, halign: 'left' },
-					// make total column narrower
-					[head.length-1]: { cellWidth: 60, halign: 'center' }
-				},
-				didParseCell: function (dataArg) {
-					// Bold the first column labels in body
-					if (dataArg.cell.section === 'body' && dataArg.column.index === 0) {
-						dataArg.cell.styles.fontStyle = 'bold';
-						dataArg.cell.styles.textColor = firstColColor;
-					}
-					// Make header lighter and centered
-					if (dataArg.cell.section === 'head') {
-						dataArg.cell.styles.cellPadding = 6;
-					}
-				}
+				columnStyles: { 0: { cellWidth: 160, halign: 'left' } }
 			});
 
-			const filename = `${(data.barangay_name || 'Barangay').replace(/\s+/g,'_')}_demographics_summary.pdf`;
+			const filename = `${(data.barangay_name || 'Barangay').replace(/\s+/g, '_')}_demographics_summary.pdf`;
 			doc.save(filename);
 		} catch (err) {
 			console.error('PDF generation error:', err);
@@ -566,96 +611,50 @@ function renderTopStats() {
 function setStat(id, value) { const el = document.getElementById(id); if (el) el.innerText = formatNumber(value); }
 
 function filterTable() {
-	if (!currentBarangayId) return;
-	const term = document.getElementById('searchInput').value.toLowerCase();
-	const filtered = allYouths.filter(y => 
-		String(y.barangay_id) === String(currentBarangayId) && 
-		y.name.toLowerCase().includes(term)
-	);
-	renderRows(filtered);
-}
+    if (!currentBarangayId) return;
+    const term = (document.getElementById('searchInput') && document.getElementById('searchInput').value || '').toLowerCase();
+    const tbody = document.getElementById('youth-data');
+    const emptyMsg = document.getElementById('empty-msg');
 
-function renderRows(data) {
-	const tbody = document.getElementById('youth-data');
-	const emptyMsg = document.getElementById('empty-msg');
-	if (data.length === 0) {
-		tbody.innerHTML = '';
-		emptyMsg.style.display = 'block';
-		return;
-	}
-	emptyMsg.style.display = 'none';
-    
-	tbody.innerHTML = data.map(y => `
-		<tr>
-			<td>${y.name}</td>
-			<td>${y.age}</td>
-			<td>${y.sex}</td>
-			<td>${y.full_data.purok || '-'}</td>
-			<td>${y.education_level}</td>
-			<td class="admin-only">
-			<div class="btn-group">
-				 <button class="btn btn-sm btn-primary" onclick="viewFullSummary(${y.id})">View Summary</button>
-				<button class="btn btn-sm btn-info" onclick="editYouth(${y.id})">Edit</button>
-				<button class="btn btn-sm btn-danger" onclick="deleteYouth(${y.id})">Delete</button>
-				</div>
-			</td>
-		</tr>
-	`).join('');
-    
-	if(isLoggedIn) document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'table-cell');
-}
+    const filtered = Array.isArray(allYouths) ? allYouths.filter(y =>
+        String(y.barangay_id) === String(currentBarangayId) &&
+        (y.name || '').toLowerCase().includes(term)
+    ) : [];
 
-function openModal() {
-	document.getElementById('youthForm').reset();
-	document.getElementById('youth-id').value = '';
-	if (currentBarangayId) document.getElementById('barangay_id').value = currentBarangayId;
-	toggleOSY();
-	updateAutoTogglesState(); // Call to update checkboxes after resetting the form
-	new bootstrap.Modal(document.getElementById('youthModal')).show();
-}
+    if (!tbody) return;
+    tbody.innerHTML = '';
 
-function editYouth(id) {
-	const y = getYouthById(id);
-	if (!y) return alert("Error: Data not found");
-	const d = y.full_data || {};
+    if (!filtered.length) {
+        if (emptyMsg) emptyMsg.style.display = 'block';
+        return;
+    }
+    if (emptyMsg) emptyMsg.style.display = 'none';
 
-	// Map of input ids to values (source: either top-level y or y.full_data)
-	const mappings = {
-		'youth-id': y.id,
-		'name': y.name,
-		'birthdate': d.birthdate,
-		'sex': y.sex || d.sex,
-		'civil_status': d.civil_status,
-		'religion': d.religion,
-		'barangay_id': d.barangay_id,
-		'purok': d.purok,
-		'email': d.email,
-		'contact_number': d.contact_number,
-		'osy_program_type': d.osy_program_type,
-		'osy_reason_no_enroll': d.osy_reason_no_enroll,
-		'disability_type': d.disability_type,
-		'specific_needs_condition': d.specific_needs_condition,
-		'tribe_name': d.tribe_name,
-		'muslim_group': d.muslim_group,
-		'education_level': y.education_level,
-		'course': d.course,
-		'school_name': d.school_name,
-		'scholarship_program': d.scholarship_program,
-		'work_status': d.work_status,
-		'kk_assembly_times': d.kk_assembly_times,
-		'kk_assembly_no_reason': d.kk_assembly_no_reason,
-		'number_of_children': d.number_of_children
-	};
+    const makeAge = (birthdate) => {
+        if (!birthdate) return '';
+        const bd = new Date(birthdate);
+        if (isNaN(bd.getTime())) return '';
+        const diff = Date.now() - bd.getTime();
+        return Math.floor(diff / (1000*60*60*24*365.25));
+    };
 
-	Object.entries(mappings).forEach(([k,v]) => setVal(k, v));
+    for (const y of filtered) {
+        const tr = document.createElement('tr');
+        const age = makeAge(y.birthdate || (y.full_data && y.full_data.birthdate));
+        const sex = y.sex || (y.full_data && y.full_data.sex) || '';
+        const purok = y.purok || (y.full_data && y.full_data.purok) || '';
+        const edu = y.education_level || (y.full_data && y.full_data.education_level) || '';
 
-	// checkboxes
-	const checks = ['is_in_school','is_osy','osy_willing_to_enroll','is_working_youth','is_pwd','has_specific_needs','is_ip','is_muslim','is_scholar','registered_voter_sk','registered_voter_national','voted_last_sk','attended_kk_assembly','is_4ps'];
-	checks.forEach(id => setChk(id, d[id] || y[id] || false));
-
-	toggleOSY();
-	updateAutoTogglesState();
-	new bootstrap.Modal($id('youthModal')).show();
+        tr.innerHTML = `
+            <td>${(y.name || '')}</td>
+            <td>${age}</td>
+            <td>${sex}</td>
+            <td>${purok}</td>
+            <td>${edu}</td>
+            <td class="admin-only"></td>
+        `;
+        tbody.appendChild(tr);
+    }
 }
 
 function saveYouth(e) {
@@ -687,6 +686,7 @@ function saveYouth(e) {
 		osy_program_type: getVal('osy_program_type'),
 		osy_reason_no_enroll: getVal('osy_reason_no_enroll'),
 		is_working_youth: getCheck('is_working_youth'),
+		is_unemployed: getCheck('is_unemployed'),
 		is_pwd: getCheck('is_pwd'),
 		disability_type: getVal('disability_type'),
 		has_specific_needs: getCheck('has_specific_needs'),
@@ -747,6 +747,72 @@ function saveYouth(e) {
 		console.error('Network/fetch error:', err);
 		alert('Network error: ' + err.message);
 	});
+}
+
+function openModal() {
+	// Clear form for new youth
+	const fields = ['youth-id','name','birthdate','sex','civil_status','religion','barangay_id','purok','email','contact_number','osy_program_type','osy_reason_no_enroll','disability_type','specific_needs_condition','tribe_name','muslim_group','education_level','course','school_name','scholarship_program','work_status','kk_assembly_no_reason','number_of_children','kk_assembly_times'];
+	fields.forEach(id => { const el = document.getElementById(id); if (!el) return; if (el.type === 'checkbox') el.checked = false; else el.value = ''; });
+	// Clear checks
+	['is_in_school','is_osy','osy_willing_to_enroll','is_working_youth','is_unemployed','is_pwd','has_specific_needs','is_ip','is_muslim','is_scholar','registered_voter_sk','registered_voter_national','voted_last_sk','attended_kk_assembly','is_4ps'].forEach(id => { const e = document.getElementById(id); if (e) e.checked = false; });
+	// Set barangay if selected
+	const b = document.getElementById('barangay_id'); if (b && currentBarangayId) { b.value = currentBarangayId; }
+	// Reset modal UI
+	toggleOSY();
+	updateAutoTogglesState();
+	// Show modal
+	new bootstrap.Modal(document.getElementById('youthModal')).show();
+}
+
+function editYouth(id) {
+	const y = getYouthById(id);
+	if (!y) return alert('Youth data not found');
+	// Fill basic fields
+	setVal('youth-id', y.id || '');
+	setVal('name', y.name || '');
+	setVal('birthdate', (y.birthdate || (y.full_data && y.full_data.birthdate)) || '');
+	setVal('sex', y.sex || (y.full_data && y.full_data.sex) || '');
+	setVal('civil_status', y.civil_status || (y.full_data && y.full_data.civil_status) || '');
+	setVal('religion', y.religion || (y.full_data && y.full_data.religion) || '');
+	setVal('barangay_id', y.barangay_id || (y.full_data && y.full_data.barangay_id) || currentBarangayId || '');
+	setVal('purok', y.purok || (y.full_data && y.full_data.purok) || '');
+	setVal('email', y.email || (y.full_data && y.full_data.email) || '');
+	setVal('contact_number', y.contact_number || (y.full_data && y.full_data.contact_number) || '');
+
+	// Checks and other fields
+	setChk('is_in_school', !!(y.is_in_school || (y.full_data && y.full_data.is_in_school)));
+	setChk('is_osy', !!(y.is_osy || (y.full_data && y.full_data.is_osy)));
+	setChk('osy_willing_to_enroll', !!(y.osy_willing_to_enroll || (y.full_data && y.full_data.osy_willing_to_enroll)));
+	setVal('osy_program_type', y.osy_program_type || (y.full_data && y.full_data.osy_program_type) || '');
+	setVal('osy_reason_no_enroll', y.osy_reason_no_enroll || (y.full_data && y.full_data.osy_reason_no_enroll) || '');
+	setChk('is_working_youth', !!(y.is_working_youth || (y.full_data && y.full_data.is_working_youth)));
+	setChk('is_unemployed', !!(y.is_unemployed || (y.full_data && y.full_data.is_unemployed)));
+	setChk('is_pwd', !!(y.is_pwd || (y.full_data && y.full_data.is_pwd)));
+	setVal('disability_type', y.disability_type || (y.full_data && y.full_data.disability_type) || '');
+	setChk('has_specific_needs', !!(y.has_specific_needs || (y.full_data && y.full_data.has_specific_needs)));
+	setVal('specific_needs_condition', y.specific_needs_condition || (y.full_data && y.full_data.specific_needs_condition) || '');
+	setChk('is_ip', !!(y.is_ip || (y.full_data && y.full_data.is_ip)));
+	setVal('tribe_name', y.tribe_name || (y.full_data && y.full_data.tribe_name) || '');
+	setChk('is_muslim', !!(y.is_muslim || (y.full_data && y.full_data.is_muslim)));
+	setVal('muslim_group', y.muslim_group || (y.full_data && y.full_data.muslim_group) || '');
+	setVal('education_level', y.education_level || (y.full_data && y.full_data.education_level) || '');
+	setVal('course', y.course || (y.full_data && y.full_data.course) || '');
+	setVal('school_name', y.school_name || (y.full_data && y.full_data.school_name) || '');
+	setChk('is_scholar', !!(y.is_scholar || (y.full_data && y.full_data.is_scholar)));
+	setVal('scholarship_program', y.scholarship_program || (y.full_data && y.full_data.scholarship_program) || '');
+	setVal('work_status', y.work_status || (y.full_data && y.full_data.work_status) || '');
+	setChk('registered_voter_sk', !!(y.registered_voter_sk || (y.full_data && y.full_data.registered_voter_sk)));
+	setChk('registered_voter_national', !!(y.registered_voter_national || (y.full_data && y.full_data.registered_voter_national)));
+	setChk('voted_last_sk', !!(y.voted_last_sk || (y.full_data && y.full_data.voted_last_sk)));
+	setChk('attended_kk_assembly', !!(y.attended_kk_assembly || (y.full_data && y.full_data.attended_kk_assembly)));
+	setVal('kk_assembly_times', (y.kk_assembly_times || (y.full_data && y.full_data.kk_assembly_times) || 0));
+	setVal('kk_assembly_no_reason', y.kk_assembly_no_reason || (y.full_data && y.full_data.kk_assembly_no_reason) || '');
+	setChk('is_4ps', !!(y.is_4ps || (y.full_data && y.full_data.is_4ps)));
+	setVal('number_of_children', (y.number_of_children || (y.full_data && y.full_data.number_of_children) || 0));
+
+	toggleOSY();
+	updateAutoTogglesState();
+	new bootstrap.Modal(document.getElementById('youthModal')).show();
 }
 
 function toggleOSY() {
@@ -1006,11 +1072,14 @@ function validateGroupsTab() {
 	const isInSchool = !!document.getElementById('is_in_school') && document.getElementById('is_in_school').checked;
 	const isOsy = !!document.getElementById('is_osy') && document.getElementById('is_osy').checked;
 	const isWorking = !!document.getElementById('is_working_youth') && document.getElementById('is_working_youth').checked;
+	const isUnemployed = !!document.getElementById('is_unemployed') && document.getElementById('is_unemployed').checked;
+	const isPwd = !!document.getElementById('is_pwd') && document.getElementById('is_pwd').checked;
+	const isIp = !!document.getElementById('is_ip') && document.getElementById('is_ip').checked;
 
-	if (!isInSchool && !isOsy && !isWorking) {
-		showModalAlert('Please select at least one Youth Classification (In School / OSY / Working) in Groups/Needs.');
+	if (!isInSchool && !isOsy && !isWorking && !isUnemployed && !isPwd && !isIp) {
+		showModalAlert('Please select at least one Youth Classification (In School / OSY / Working / Unemployed / PWD / IP) in Groups/Needs.');
 		// focus first checkbox
-		const first = document.getElementById('is_in_school') || document.getElementById('is_osy') || document.getElementById('is_working_youth');
+		const first = document.getElementById('is_in_school') || document.getElementById('is_osy') || document.getElementById('is_working_youth') || document.getElementById('is_unemployed') || document.getElementById('is_pwd') || document.getElementById('is_ip');
 		if (first) first.focus();
 		return false;
 	}
@@ -1326,4 +1395,6 @@ window.saveYouth = saveYouth;
 window.toggleOSY = toggleOSY;
 window.downloadBarangaySummaryCSV = downloadBarangaySummaryCSV;
 window.downloadBarangaySummaryPDF = downloadBarangaySummaryPDF;
+window.toggleSidebar = toggleSidebar;
+window.closeSidebar = closeSidebar;
 

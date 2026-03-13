@@ -87,8 +87,6 @@ h1,h2,h3,h4,h5,h6 {
 .navbar-brand-area img {
     height: 38px;
     width: auto;
-    filter: brightness(0) invert(1);
-    opacity: .9;
 }
 
 .brand-text-main {
@@ -185,8 +183,6 @@ h1,h2,h3,h4,h5,h6 {
 .side-menu-logo img {
     height: 32px;
     width: auto;
-    filter: brightness(0) invert(1);
-    opacity: .9;
 }
 .side-menu-logo span {
     font-family: 'Bricolage Grotesque', sans-serif;
@@ -884,8 +880,6 @@ body.login-page::before {
 .login-brand img {
     height: 72px;
     width: auto;
-    filter: brightness(0) invert(1);
-    opacity: .9;
     margin-bottom: 24px;
     display: block;
 }

@@ -89,7 +89,7 @@
                         <div style="font-size:.78rem;color:var(--text-muted);">22 Barangays — Manolo Fortich, Bukidnon</div>
                     </div>
                 </div>
-                <div class="report-card-body" style="min-height:280px;">
+                <div class="report-card-body" style="height:520px;overflow-y:auto;position:relative;">
                     <canvas id="topCitiesChart"></canvas>
                 </div>
             </div>
@@ -122,28 +122,7 @@
                 </div>
                 <div class="report-card-body" style="max-height:420px;overflow-y:auto;padding-top:8px;">
                     <div id="legend-list">
-                        <div class="legend-item"><span class="legend-swatch" style="background:#1f77b4"></span>Agusan Canyon</div>
-                        <div class="legend-item"><span class="legend-swatch" style="background:#ff7f0e"></span>Alae</div>
-                        <div class="legend-item"><span class="legend-swatch" style="background:#2ca02c"></span>Dahilayan</div>
-                        <div class="legend-item"><span class="legend-swatch" style="background:#d62728"></span>Daliig</div>
-                        <div class="legend-item"><span class="legend-swatch" style="background:#9467bd"></span>Danlag</div>
-                        <div class="legend-item"><span class="legend-swatch" style="background:#8c564b"></span>Didum</div>
-                        <div class="legend-item"><span class="legend-swatch" style="background:#e377c2"></span>Gulang-gulang</div>
-                        <div class="legend-item"><span class="legend-swatch" style="background:#7f7f7f"></span>Kalugmanan</div>
-                        <div class="legend-item"><span class="legend-swatch" style="background:#bcbd22"></span>Lindaban</div>
-                        <div class="legend-item"><span class="legend-swatch" style="background:#17becf"></span>Lingion</div>
-                        <div class="legend-item"><span class="legend-swatch" style="background:#393b79"></span>Luncan</div>
-                        <div class="legend-item"><span class="legend-swatch" style="background:#637939"></span>Maluko</div>
-                        <div class="legend-item"><span class="legend-swatch" style="background:#8c6d31"></span>Mambatangan</div>
-                        <div class="legend-item"><span class="legend-swatch" style="background:#843c39"></span>Mampayag</div>
-                        <div class="legend-item"><span class="legend-swatch" style="background:#7b4173"></span>Mantibugao</div>
-                        <div class="legend-item"><span class="legend-swatch" style="background:#3182bd"></span>Minuro</div>
-                        <div class="legend-item"><span class="legend-swatch" style="background:#31a354"></span>San Miguel</div>
-                        <div class="legend-item"><span class="legend-swatch" style="background:#756bb1"></span>Sankaran</div>
-                        <div class="legend-item"><span class="legend-swatch" style="background:#636363"></span>Santiago</div>
-                        <div class="legend-item"><span class="legend-swatch" style="background:#d6616b"></span>Santo Nino</div>
-                        <div class="legend-item"><span class="legend-swatch" style="background:#e6550d"></span>Tankulan</div>
-                        <div class="legend-item"><span class="legend-swatch" style="background:#74c476"></span>Ticala</div>
+                        <div class="text-muted" style="font-size:.8rem;padding:8px 0;">Loading barangays…</div>
                     </div>
                 </div>
             </div>
@@ -186,18 +165,59 @@
     Chart.defaults.color       = '#5f7199';
 
     async function initCharts() {
-        const barangays = ['Agusan Canyon','Alae','Dahilayan','Daliig','Danlag','Didum','Gulang-gulang','Kalugmanan','Lindaban','Lingion','Luncan','Maluko','Mambatangan','Mampayag','Mantibugao','Minuro','San Miguel','Sankaran','Santiago','Santo Nino','Tankulan','Ticala'];
+        let barangays = [];
+        try {
+            const res = await fetch('/api/barangays/');
+            if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data) && data.length) {
+                    barangays = data.map(b => b.name);
+                }
+            }
+        } catch(e) { console.warn('Could not fetch barangays from API:', e); }
 
         const demoEl = document.getElementById('chart-demo');
         let demoData = (function(){ try{ return demoEl?JSON.parse(demoEl.textContent):null;}catch(e){return null;}})();
-        if(!demoData){ demoData={}; for(const b of barangays) demoData[b]={isy:0,osy:0,yd:0,iy:0,wk:0,uy:0}; }
 
-        const citiesValues = barangays.map(b=>{ const d=demoData[b]||{}; return ['isy','osy','yd','iy','wk','uy'].reduce((s,k)=>s+Number(d[k]||0),0); });
+        if (!barangays.length && demoData && typeof demoData === 'object') {
+            barangays = Object.keys(demoData).sort();
+        }
+
+        if (!barangays.length) {
+            console.warn('No barangay data available.');
+            return;
+        }
+
+        if (!demoData) { demoData = {}; }
+        for (const b of barangays) {
+            if (!demoData[b]) demoData[b] = {isy:0,osy:0,yd:0,iy:0,wk:0,uy:0};
+        }
+
+        const legendColors = paletteColors(barangays.length);
+        const legendList = document.getElementById('legend-list');
+        if (legendList) {
+            legendList.innerHTML = barangays.map((b, i) =>
+                `<div class="legend-item">
+                    <span class="legend-swatch" style="background:${legendColors[i]}"></span>${b}
+                </div>`
+            ).join('');
+        }
+
+        const subtitle = document.querySelector('.col-lg-7 .report-card-header div:last-child div:last-child');
+        if (subtitle) subtitle.textContent = `${barangays.length} Barangays — Manolo Fortich, Bukidnon`;
 
         const catKeys   = ['isy','osy','yd','iy','wk','uy'];
         const catLabels = ['In School (ISY)','Out of School (OSY)','Youth w/ Disability','Indigenous Youth','Working Youth','Unemployed Youth'];
         const catColors = ['#2351a6','#d97706','#7c3aed','#059669','#0284c7','#e11d48'];
-        const catTotals = catKeys.map(k=>Object.values(demoData).reduce((s,o)=>s+Number((o&&o[k])||0),0));
+
+        const citiesValues = barangays.map(b => {
+            const d = demoData[b] || {};
+            return catKeys.reduce((s, k) => s + Number(d[k] || 0), 0);
+        });
+
+        const catTotals = catKeys.map(k =>
+            Object.values(demoData).reduce((s, o) => s + Number((o && o[k]) || 0), 0)
+        );
 
         new Chart(document.getElementById('pieChart'), {
             type: 'doughnut',
@@ -214,15 +234,18 @@
             }
         });
 
-        new Chart(document.getElementById('topCitiesChart'), {
+        const topCitiesCanvas = document.getElementById('topCitiesChart');
+        topCitiesCanvas.style.height = (barangays.length * 28 + 40) + 'px';
+        new Chart(topCitiesCanvas, {
             type: 'bar',
             data: {
                 labels: barangays,
-                datasets:[{ label:'Total Youth', data: citiesValues, backgroundColor: paletteColors(barangays.length), borderRadius: 4, borderSkipped: false }]
+                datasets:[{ label:'Total Youth', data: citiesValues, backgroundColor: legendColors, borderRadius: 4, borderSkipped: false }]
             },
             options: {
                 indexAxis: 'y',
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: { legend:{ display:false } },
                 scales: {
                     x: { beginAtZero:true, grid:{ color:'rgba(0,0,0,.05)' } },
@@ -231,9 +254,9 @@
             }
         });
 
-        const datasets = catKeys.map((k,i)=>({
+        const datasets = catKeys.map((k, i) => ({
             label: catLabels[i],
-            data: barangays.map(b=>{ const d=demoData[b]||{}; return Number(d[k]||0); }),
+            data: barangays.map(b => { const d = demoData[b] || {}; return Number(d[k] || 0); }),
             backgroundColor: catColors[i],
             stack: 'stack1',
             borderRadius: 3

@@ -441,9 +441,13 @@ function openBarangay(id, name) {
 	fetchBarangaySummary(currentBarangayId).then(data => {
 		const youths = Array.isArray(allYouths) ? allYouths.filter(y => String(y.barangay_id) === String(currentBarangayId)) : [];
 		const total = (data && data.total != null) ? data.total : youths.length;
-		const inSchool = youths.filter(y => y.is_in_school || (y.full_data && y.full_data.is_in_school)).length;
-		const osy = (data && data.osy != null) ? data.osy : youths.filter(y => y.is_osy || (y.full_data && y.full_data.is_osy)).length;
-		const registered = youths.filter(y => (y.full_data && (y.full_data.registered_voter_national || y.full_data.registered_voter_sk)) || y.registered_voter_national || y.registered_voter_sk).length;
+		const inSchool = youths.filter(y => toBool(y.is_in_school) || (y.full_data && toBool(y.full_data.is_in_school))).length;
+		const osy = (data && data.osy != null) ? data.osy : youths.filter(y => toBool(y.is_osy) || (y.full_data && toBool(y.full_data.is_osy))).length;
+		const registered = youths.filter(y => {
+			const sk  = toBool(y.registered_voter_sk)  || (y.full_data && toBool(y.full_data.registered_voter_sk));
+			const nat = toBool(y.registered_voter_national) || (y.full_data && toBool(y.full_data.registered_voter_national));
+			return sk || nat;
+		}).length;
 
 		setStat('stat-total', total);
 		setStat('stat-in-school', inSchool);
@@ -550,17 +554,57 @@ function fetchYouths() {
 
 function formatNumber(n) { return (typeof n === 'number') ? n.toLocaleString() : n; }
 
+function toBool(v) {
+	if (v === true || v === 1 || v === '1' || v === 'true' || v === 'True') return true;
+	return false;
+}
+
 function renderTopStats() {
 	const total = Array.isArray(allYouths) ? allYouths.length : 0;
-	const inSchool = Array.isArray(allYouths) ? allYouths.filter(y => y.is_in_school || (y.full_data && y.full_data.is_in_school)).length : 0;
-	const osy = Array.isArray(allYouths) ? allYouths.filter(y => y.is_osy || (y.full_data && y.full_data.is_osy)).length : 0;
-	const registered = Array.isArray(allYouths) ? allYouths.filter(y => (y.full_data && (y.full_data.registered_voter_national || y.full_data.registered_voter_sk)) || y.registered_voter_national || y.registered_voter_sk).length : 0;
+	const inSchool = Array.isArray(allYouths)
+		? allYouths.filter(y => toBool(y.is_in_school) || (y.full_data && toBool(y.full_data.is_in_school))).length
+		: 0;
+	const osy = Array.isArray(allYouths)
+		? allYouths.filter(y => toBool(y.is_osy) || (y.full_data && toBool(y.full_data.is_osy))).length
+		: 0;
+	const registered = Array.isArray(allYouths)
+		? allYouths.filter(y => {
+			const sk  = toBool(y.registered_voter_sk)  || (y.full_data && toBool(y.full_data.registered_voter_sk));
+			const nat = toBool(y.registered_voter_national) || (y.full_data && toBool(y.full_data.registered_voter_national));
+			return sk || nat;
+		}).length
+		: 0;
 
 	const set = (id, value) => { const el = document.getElementById(id); if (el) el.innerText = formatNumber(value); };
 	set('stat-total', total);
 	set('stat-in-school', inSchool);
 	set('stat-osy', osy);
 	set('stat-registered', registered);
+
+	if (total === 0 && Array.isArray(BARANGAYS) && BARANGAYS.length > 0) {
+		fetchAggregatedStats();
+	}
+}
+
+async function fetchAggregatedStats() {
+	try {
+		let grandTotal = 0, grandOsy = 0;
+		const fetches = BARANGAYS.map(b =>
+			fetch(`/api/barangay_summary/${b.id}/`)
+				.then(r => r.ok ? r.json() : null)
+				.catch(() => null)
+		);
+		const results = await Promise.all(fetches);
+		results.forEach(data => {
+			if (!data) return;
+			grandTotal += Number(data.total || 0);
+			grandOsy   += Number(data.osy   || 0);
+		});
+		if (grandTotal > 0) {
+			setStat('stat-total', grandTotal);
+			setStat('stat-osy', grandOsy);
+		}
+	} catch(e) { console.warn('fetchAggregatedStats failed:', e); }
 }
 
 function setStat(id, value) { const el = document.getElementById(id); if (el) el.innerText = formatNumber(value); }
@@ -620,6 +664,11 @@ function openModal() {
 	if (currentBarangayId) document.getElementById('barangay_id').value = currentBarangayId;
 	toggleOSY();
 	updateAutoTogglesState();
+	document.querySelectorAll('.edit-save-btn').forEach(btn => btn.style.display = 'none');
+	if (typeof switchTab === 'function') {
+		switchTab('tab-personal',
+			document.querySelector('.modal-tab-btn[onclick*="tab-personal"]'));
+	}
 	new bootstrap.Modal(document.getElementById('youthModal')).show();
 }
 
@@ -662,15 +711,16 @@ function editYouth(id) {
 
 	toggleOSY();
 	updateAutoTogglesState();
+	document.querySelectorAll('.edit-save-btn').forEach(btn => btn.style.display = '');
+	if (typeof switchTab === 'function') {
+		switchTab('tab-personal',
+			document.querySelector('.modal-tab-btn[onclick*="tab-personal"]'));
+	}
 	new bootstrap.Modal($id('youthModal')).show();
 }
 
 function saveYouth(e) {
 	e.preventDefault();
-	if (!validateTab('#tab-civic')) {
-		showModalAlert('Please complete Civic & Other before saving the profile.');
-		return;
-	}
 	const getVal = (id) => document.getElementById(id).value;
 	const getCheck = (id) => document.getElementById(id).checked;
 
@@ -718,6 +768,10 @@ function saveYouth(e) {
 	};
 
 	const existingId = getVal('youth-id');
+	if (!existingId && !validateTab('#tab-civic')) {
+		showModalAlert('Please complete Civic & Other before saving the profile.');
+		return;
+	}
 	if (existingId) data.id = parseInt(existingId);
 
 	const method = data.id ? 'PUT' : 'POST';
@@ -793,7 +847,7 @@ function updateTabState() {
 	const eduValid = personalValid && groupsValid && isTabValid('#tab-edu');
 	const civicValid = personalValid && groupsValid && eduValid && isTabValid('#tab-civic');
 
-	const tabLinks = document.querySelectorAll('#formTabs a[data-bs-toggle="tab"]');
+	const tabLinks = document.querySelectorAll('#formTabsBS a[data-bs-toggle="tab"]');
 	tabLinks.forEach(link => {
 		const href = link.getAttribute('href');
 		if (href === '#tab-personal') {
@@ -841,7 +895,7 @@ function isTabValid(tabSelector) {
 }
 
 function initFormNavigation() {
-	const tabLinks = document.querySelectorAll('#formTabs a[data-bs-toggle="tab"]');
+	const tabLinks = document.querySelectorAll('#formTabsBS a[data-bs-toggle="tab"]');
 	tabLinks.forEach(link => {
 		link.addEventListener('show.bs.tab', (e) => {
 			const targetHref = link.getAttribute('href');
@@ -1020,9 +1074,17 @@ function validateEduTab() {
 	return true;
 }
 
+function syncModalTabBtn(targetSelector) {
+	const tabId = targetSelector.replace(/^#/, '');
+	document.querySelectorAll('.modal-tab-btn').forEach(btn => {
+		const onclickVal = btn.getAttribute('onclick') || '';
+		btn.classList.toggle('active', onclickVal.includes(tabId));
+	});
+}
+
 function nextTab(targetSelector) {
 	updateTabState();
-	const activeLink = document.querySelector('#formTabs a.active');
+	const activeLink = document.querySelector('#formTabsBS a.active');
 	const leaving = activeLink ? (activeLink.getAttribute('href') || '') : '';
 	if (leaving && !validateTab(leaving)) {
 		if (leaving === '#tab-personal') showModalAlert('Please complete required Personal fields.');
@@ -1032,7 +1094,7 @@ function nextTab(targetSelector) {
 		return;
 	}
 
-	const target = document.querySelector(`#formTabs a[href="${targetSelector}"]`);
+	const target = document.querySelector(`#formTabsBS a[href="${targetSelector}"]`);
 	if (!target) return console.warn('nextTab: target not found', targetSelector);
 
 	if (target.getAttribute('data-disabled') === 'true') {
@@ -1046,20 +1108,21 @@ function nextTab(targetSelector) {
 
 	try {
 		new bootstrap.Tab(target).show();
+		syncModalTabBtn(targetSelector);
 		updateTabState();
 		return;
 	} catch (e) {
-		try { target.click(); updateTabState(); return; } catch (e2) {}
+		try { target.click(); syncModalTabBtn(targetSelector); updateTabState(); return; } catch (e2) {}
 	}
 
 	activateTab(targetSelector);
 }
 
 function prevTab(targetSelector) {
-	const target = document.querySelector(`#formTabs a[href="${targetSelector}"]`);
+	const target = document.querySelector(`#formTabsBS a[href="${targetSelector}"]`);
 	if (!target) return console.warn('prevTab: target not found', targetSelector);
-	try { new bootstrap.Tab(target).show(); updateTabState(); return; } catch (e) {
-		try { target.click(); updateTabState(); return; } catch (e2) {}
+	try { new bootstrap.Tab(target).show(); syncModalTabBtn(targetSelector); updateTabState(); return; } catch (e) {
+		try { target.click(); syncModalTabBtn(targetSelector); updateTabState(); return; } catch (e2) {}
 	}
 	activateTab(targetSelector);
 }
@@ -1068,11 +1131,11 @@ window.nextTab = nextTab;
 window.prevTab = prevTab;
 
 function activateTab(targetSelector) {
-	const link = document.querySelector(`#formTabs a[href="${targetSelector}"]`);
+	const link = document.querySelector(`#formTabsBS a[href="${targetSelector}"]`);
 	const pane = document.querySelector(targetSelector);
 	if (!link || !pane) return console.warn('activateTab: missing link or pane', targetSelector, link, pane);
 
-	document.querySelectorAll('#formTabs a[data-bs-toggle="tab"]').forEach(a => {
+	document.querySelectorAll('#formTabsBS a[data-bs-toggle="tab"]').forEach(a => {
 		a.classList.remove('active');
 		a.setAttribute('aria-selected', 'false');
 	});
@@ -1089,6 +1152,7 @@ function activateTab(targetSelector) {
 	pane.classList.add('active');
 	pane.setAttribute('aria-hidden', 'false');
 
+	syncModalTabBtn(targetSelector);
 	updateTabState();
 }
 

@@ -165,30 +165,52 @@
     Chart.defaults.color       = '#5f7199';
 
     async function initCharts() {
-        let barangays = [];
+        let barangayObjs = [];
         try {
             const res = await fetch('/api/barangays/');
             if (res.ok) {
                 const data = await res.json();
-                if (Array.isArray(data) && data.length) {
-                    barangays = data.map(b => b.name);
-                }
+                if (Array.isArray(data) && data.length) barangayObjs = data;
             }
         } catch(e) { console.warn('Could not fetch barangays from API:', e); }
 
         const demoEl = document.getElementById('chart-demo');
-        let demoData = (function(){ try{ return demoEl?JSON.parse(demoEl.textContent):null;}catch(e){return null;}})();
+        let demoData = (function(){ try{ return demoEl ? JSON.parse(demoEl.textContent) : null; }catch(e){ return null; }})();
+
+        if (!demoData || Object.keys(demoData).length === 0) {
+            demoData = {};
+            try {
+                const yRes = await fetch('/api/youth/');
+                if (yRes.ok) {
+                    const youths = await yRes.json();
+                    if (Array.isArray(youths)) {
+                        const bMap = {};
+                        barangayObjs.forEach(b => { bMap[String(b.id)] = b.name; });
+                        const toBool = v => (v === true || v === 1 || v === '1' || v === 'true' || v === 'True');
+                        youths.forEach(y => {
+                            const bName = bMap[String(y.barangay_id)] || String(y.barangay_id);
+                            if (!demoData[bName]) demoData[bName] = {isy:0,osy:0,yd:0,iy:0,wk:0,uy:0};
+                            const d = y.full_data || y;
+                            if (toBool(d.is_in_school))    demoData[bName].isy++;
+                            if (toBool(d.is_osy))          demoData[bName].osy++;
+                            if (toBool(d.is_pwd))          demoData[bName].yd++;
+                            if (toBool(d.is_ip))           demoData[bName].iy++;
+                            if (toBool(d.is_working_youth))demoData[bName].wk++;
+                            if (!toBool(d.is_in_school) && !toBool(d.is_osy) && !toBool(d.is_working_youth)) demoData[bName].uy++;
+                        });
+                    }
+                }
+            } catch(e) { console.warn('Could not fetch youth data for charts:', e); }
+        }
+
+        let barangays = barangayObjs.map(b => b.name);
 
         if (!barangays.length && demoData && typeof demoData === 'object') {
             barangays = Object.keys(demoData).sort();
         }
 
-        if (!barangays.length) {
-            console.warn('No barangay data available.');
-            return;
-        }
+        if (!barangays.length) { console.warn('No barangay data available.'); return; }
 
-        if (!demoData) { demoData = {}; }
         for (const b of barangays) {
             if (!demoData[b]) demoData[b] = {isy:0,osy:0,yd:0,iy:0,wk:0,uy:0};
         }
@@ -197,14 +219,9 @@
         const legendList = document.getElementById('legend-list');
         if (legendList) {
             legendList.innerHTML = barangays.map((b, i) =>
-                `<div class="legend-item">
-                    <span class="legend-swatch" style="background:${legendColors[i]}"></span>${b}
-                </div>`
+                `<div class="legend-item"><span class="legend-swatch" style="background:${legendColors[i]}"></span>${b}</div>`
             ).join('');
         }
-
-        const subtitle = document.querySelector('.col-lg-7 .report-card-header div:last-child div:last-child');
-        if (subtitle) subtitle.textContent = `${barangays.length} Barangays — Manolo Fortich, Bukidnon`;
 
         const catKeys   = ['isy','osy','yd','iy','wk','uy'];
         const catLabels = ['In School (ISY)','Out of School (OSY)','Youth w/ Disability','Indigenous Youth','Working Youth','Unemployed Youth'];
@@ -214,65 +231,34 @@
             const d = demoData[b] || {};
             return catKeys.reduce((s, k) => s + Number(d[k] || 0), 0);
         });
-
         const catTotals = catKeys.map(k =>
             Object.values(demoData).reduce((s, o) => s + Number((o && o[k]) || 0), 0)
         );
 
+        /* ── 8. Doughnut chart ── */
         new Chart(document.getElementById('pieChart'), {
             type: 'doughnut',
-            data: {
-                labels: catLabels,
-                datasets:[{ data: catTotals, backgroundColor: catColors, borderWidth: 2, borderColor: '#fff', hoverBorderColor: '#fff' }]
-            },
-            options: {
-                responsive: true,
-                cutout: '60%',
-                plugins: {
-                    legend: { position:'bottom', labels:{ padding:14, usePointStyle:true, pointStyleWidth:10, font:{size:11} } }
-                }
-            }
+            data: { labels: catLabels, datasets:[{ data: catTotals, backgroundColor: catColors, borderWidth: 2, borderColor: '#fff', hoverBorderColor: '#fff' }] },
+            options: { responsive: true, cutout: '60%', plugins: { legend: { position:'bottom', labels:{ padding:14, usePointStyle:true, pointStyleWidth:10, font:{size:11} } } } }
         });
 
         const topCitiesCanvas = document.getElementById('topCitiesChart');
         topCitiesCanvas.style.height = (barangays.length * 28 + 40) + 'px';
         new Chart(topCitiesCanvas, {
             type: 'bar',
-            data: {
-                labels: barangays,
-                datasets:[{ label:'Total Youth', data: citiesValues, backgroundColor: legendColors, borderRadius: 4, borderSkipped: false }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend:{ display:false } },
-                scales: {
-                    x: { beginAtZero:true, grid:{ color:'rgba(0,0,0,.05)' } },
-                    y: { ticks:{ font:{size:11} }, grid:{ display:false } }
-                }
-            }
+            data: { labels: barangays, datasets:[{ label:'Total Youth', data: citiesValues, backgroundColor: legendColors, borderRadius: 4, borderSkipped: false }] },
+            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend:{ display:false } }, scales: { x: { beginAtZero:true, grid:{ color:'rgba(0,0,0,.05)' } }, y: { ticks:{ font:{size:11} }, grid:{ display:false } } } }
         });
 
         const datasets = catKeys.map((k, i) => ({
             label: catLabels[i],
             data: barangays.map(b => { const d = demoData[b] || {}; return Number(d[k] || 0); }),
-            backgroundColor: catColors[i],
-            stack: 'stack1',
-            borderRadius: 3
+            backgroundColor: catColors[i], stack: 'stack1', borderRadius: 3
         }));
-
         new Chart(document.getElementById('avgTimeChart'), {
             type: 'bar',
             data: { labels: barangays, datasets: datasets },
-            options: {
-                responsive: true,
-                plugins: { legend:{ display:true, position:'top', labels:{ usePointStyle:true, padding:14, font:{size:11} } } },
-                scales: {
-                    x: { stacked:true, ticks:{ maxRotation:45, font:{size:10} }, grid:{ display:false } },
-                    y: { stacked:true, beginAtZero:true, grid:{ color:'rgba(0,0,0,.05)' }, title:{ display:true, text:'Youth Count', font:{size:11} } }
-                }
-            }
+            options: { responsive: true, plugins: { legend:{ display:true, position:'top', labels:{ usePointStyle:true, padding:14, font:{size:11} } } }, scales: { x: { stacked:true, ticks:{ maxRotation:45, font:{size:10} }, grid:{ display:false } }, y: { stacked:true, beginAtZero:true, grid:{ color:'rgba(0,0,0,.05)' }, title:{ display:true, text:'Youth Count', font:{size:11} } } } }
         });
     }
 

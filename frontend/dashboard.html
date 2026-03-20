@@ -351,6 +351,9 @@
                                 <div class="col-12"><div class="form-section-title">Youth Classification</div></div>
                                 <div class="col-md-4 form-check ms-3"><input type="checkbox" class="form-check-input" id="is_in_school"> <label for="is_in_school">In School</label></div>
                                 <div class="col-md-4 form-check"><input type="checkbox" class="form-check-input" id="is_working_youth"> <label for="is_working_youth">Working Youth</label></div>
+                                <div class="col-md-4 form-check"><input type="checkbox" class="form-check-input" id="is_unemployed_youth"> <label for="is_unemployed_youth">Unemployed Youth</label></div>
+                                <div class="col-md-4 form-check ms-3"><input type="checkbox" class="form-check-input" id="is_ip"> <label for="is_ip">IP Youth (IP)</label></div>
+                                <div class="col-md-4 form-check"><input type="checkbox" class="form-check-input" id="is_pwd"> <label for="is_pwd">Youth with Disability (PWD)</label></div>
 
                                 <div class="col-12" style="background:var(--surface);border-radius:var(--r-md);padding:14px;border:1px solid var(--border);">
                                     <div class="form-check"><input type="checkbox" class="form-check-input" id="is_osy" onchange="toggleOSY()"> <label for="is_osy"><strong>Out of School Youth (OSY)</strong></label></div>
@@ -371,7 +374,7 @@
 
                                 <div class="col-12"><div class="form-section-title">Special Needs</div></div>
                                 <div class="col-md-6">
-                                    <div class="form-check mb-1"><input type="checkbox" class="form-check-input" id="is_pwd"> <label for="is_pwd">PWD</label></div>
+                                    <label class="form-label">Type of Disability</label>
                                     <input type="text" id="disability_type" class="form-control" placeholder="Type of Disability">
                                 </div>
                                 <div class="col-md-6">
@@ -389,7 +392,7 @@
 
                                 <div class="col-12"><div class="form-section-title">Cultural Groups</div></div>
                                 <div class="col-md-6">
-                                    <div class="form-check mb-1"><input type="checkbox" class="form-check-input" id="is_ip"> <label for="is_ip">7 Tribes (Indigenous)</label></div>
+                                    <label class="form-label">7 Tribes (Indigenous) — Tribe Name</label>
                                     <select id="tribe_name" class="form-select">
                                         <option value="">-- Select Tribe --</option>
                                         <option>Higaonon</option><option>Tala-andig</option><option>Bukidnon</option>
@@ -541,11 +544,6 @@ function switchTab(tabId, btn) {
         new bootstrap.Tab(bsLink).show();
     }
 }
-
-document.getElementById('youthModal').addEventListener('hidden.bs.modal', function () {
-    switchTab('tab-personal',
-        document.querySelector('.modal-tab-btn[onclick*="tab-personal"]'));
-});
 
 document.getElementById('youthModal').addEventListener('hidden.bs.modal', function () {
     switchTab('tab-personal',

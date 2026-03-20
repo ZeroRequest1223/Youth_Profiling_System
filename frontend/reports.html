@@ -172,48 +172,59 @@
                 const data = await res.json();
                 if (Array.isArray(data) && data.length) barangayObjs = data;
             }
-        } catch(e) { console.warn('Could not fetch barangays from API:', e); }
+        } catch(e) { console.warn('Could not fetch barangays:', e); }
+
+        let allYouths = [];
+        try {
+            const res = await fetch('/api/youth/');
+            if (res.ok) allYouths = await res.json();
+        } catch(e) { console.warn('Could not fetch youth:', e); }
+
+        const bIdToName = {};
+        const bNameToId = {};
+        barangayObjs.forEach(b => {
+            bIdToName[String(b.id)] = b.name;
+            bNameToId[b.name] = String(b.id);
+        });
+
+        const recordCount = {}; 
+        if (Array.isArray(allYouths)) {
+            allYouths.forEach(y => {
+                const name = bIdToName[String(y.barangay_id)] || String(y.barangay_id);
+                recordCount[name] = (recordCount[name] || 0) + 1;
+            });
+        }
+
+        const toBool = v => (v === true || v === 1 || v === '1' || v === 'true' || v === 'True');
+        const demoData = {};
 
         const demoEl = document.getElementById('chart-demo');
-        let demoData = (function(){ try{ return demoEl ? JSON.parse(demoEl.textContent) : null; }catch(e){ return null; }})();
+        const serverDemo = (function(){ try{ return demoEl ? JSON.parse(demoEl.textContent) : null; }catch(e){ return null; }})();
 
-        if (!demoData || Object.keys(demoData).length === 0) {
-            demoData = {};
-            try {
-                const yRes = await fetch('/api/youth/');
-                if (yRes.ok) {
-                    const youths = await yRes.json();
-                    if (Array.isArray(youths)) {
-                        const bMap = {};
-                        barangayObjs.forEach(b => { bMap[String(b.id)] = b.name; });
-                        const toBool = v => (v === true || v === 1 || v === '1' || v === 'true' || v === 'True');
-                        youths.forEach(y => {
-                            const bName = bMap[String(y.barangay_id)] || String(y.barangay_id);
-                            if (!demoData[bName]) demoData[bName] = {isy:0,osy:0,yd:0,iy:0,wk:0,uy:0};
-                            const d = y.full_data || y;
-                            if (toBool(d.is_in_school))    demoData[bName].isy++;
-                            if (toBool(d.is_osy))          demoData[bName].osy++;
-                            if (toBool(d.is_pwd))          demoData[bName].yd++;
-                            if (toBool(d.is_ip))           demoData[bName].iy++;
-                            if (toBool(d.is_working_youth))demoData[bName].wk++;
-                            if (!toBool(d.is_in_school) && !toBool(d.is_osy) && !toBool(d.is_working_youth)) demoData[bName].uy++;
-                        });
-                    }
-                }
-            } catch(e) { console.warn('Could not fetch youth data for charts:', e); }
+        if (serverDemo && Object.keys(serverDemo).length > 0) {
+            Object.assign(demoData, serverDemo);
+        } else if (Array.isArray(allYouths) && allYouths.length > 0) {
+            allYouths.forEach(y => {
+                const name = bIdToName[String(y.barangay_id)] || String(y.barangay_id);
+                if (!demoData[name]) demoData[name] = {isy:0,osy:0,yd:0,iy:0,wk:0,uy:0};
+                const d = y.full_data || y;
+                if (toBool(d.is_in_school))     demoData[name].isy++;
+                if (toBool(d.is_osy))            demoData[name].osy++;
+                if (toBool(d.is_pwd))            demoData[name].yd++;
+                if (toBool(d.is_ip))             demoData[name].iy++;
+                if (toBool(d.is_working_youth))  demoData[name].wk++;
+                if (toBool(d.is_unemployed_youth)) demoData[name].uy++;
+            });
         }
 
         let barangays = barangayObjs.map(b => b.name);
-
-        if (!barangays.length && demoData && typeof demoData === 'object') {
-            barangays = Object.keys(demoData).sort();
-        }
-
+        if (!barangays.length) barangays = Object.keys(recordCount).sort();
         if (!barangays.length) { console.warn('No barangay data available.'); return; }
 
-        for (const b of barangays) {
-            if (!demoData[b]) demoData[b] = {isy:0,osy:0,yd:0,iy:0,wk:0,uy:0};
-        }
+        barangays.forEach(b => {
+            if (!demoData[b])    demoData[b]    = {isy:0,osy:0,yd:0,iy:0,wk:0,uy:0};
+            if (!recordCount[b]) recordCount[b] = 0;
+        });
 
         const legendColors = paletteColors(barangays.length);
         const legendList = document.getElementById('legend-list');
@@ -227,21 +238,17 @@
         const catLabels = ['In School (ISY)','Out of School (OSY)','Youth w/ Disability','Indigenous Youth','Working Youth','Unemployed Youth'];
         const catColors = ['#2351a6','#d97706','#7c3aed','#059669','#0284c7','#e11d48'];
 
-        const citiesValues = barangays.map(b => {
-            const d = demoData[b] || {};
-            return catKeys.reduce((s, k) => s + Number(d[k] || 0), 0);
-        });
         const catTotals = catKeys.map(k =>
             Object.values(demoData).reduce((s, o) => s + Number((o && o[k]) || 0), 0)
         );
 
-        /* ── 8. Doughnut chart ── */
         new Chart(document.getElementById('pieChart'), {
             type: 'doughnut',
             data: { labels: catLabels, datasets:[{ data: catTotals, backgroundColor: catColors, borderWidth: 2, borderColor: '#fff', hoverBorderColor: '#fff' }] },
             options: { responsive: true, cutout: '60%', plugins: { legend: { position:'bottom', labels:{ padding:14, usePointStyle:true, pointStyleWidth:10, font:{size:11} } } } }
         });
 
+        const citiesValues = barangays.map(b => recordCount[b] || 0);
         const topCitiesCanvas = document.getElementById('topCitiesChart');
         topCitiesCanvas.style.height = (barangays.length * 28 + 40) + 'px';
         new Chart(topCitiesCanvas, {

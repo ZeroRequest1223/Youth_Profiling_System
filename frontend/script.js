@@ -153,8 +153,6 @@ function updateAutoTogglesState() {
 	const numChildren = get('number_of_children');
 
 	if (disability) {
-		const pwd = get('is_pwd');
-		if (pwd) pwd.checked = String(disability.value || '').trim() !== '';
 	}
 
 	if (specific) {
@@ -319,8 +317,19 @@ function viewBarangaySummary() {
 			<div class="mt-3">
 				<p><strong>Special counts:</strong></p>
 				<ul>
-					<li>PWD: <strong>${data.pwd ?? 0}</strong></li>
+					<li>PWD — Male: <strong>${data.pwd_male ?? 0}</strong></li>
+					<li>PWD — Female: <strong>${data.pwd_female ?? 0}</strong></li>
+					<li>PWD (Total): <strong>${data.pwd ?? 0}</strong></li>
 					<li>4Ps: <strong>${data.fourps ?? 0}</strong></li>
+					<li>Working — Male: <strong>${data.working_male ?? 0}</strong></li>
+					<li>Working — Female: <strong>${data.working_female ?? 0}</strong></li>
+					<li>Working (Total): <strong>${data.working ?? ((data.working_male ?? 0) + (data.working_female ?? 0))}</strong></li>
+					<li>Unemployed — Male: <strong>${data.unemployed_male ?? 0}</strong></li>
+					<li>Unemployed — Female: <strong>${data.unemployed_female ?? 0}</strong></li>
+					<li>Unemployed (Total): <strong>${data.unemployed ?? ((data.unemployed_male ?? 0) + (data.unemployed_female ?? 0))}</strong></li>
+					<li>IP — Male: <strong>${data.ip_male ?? 0}</strong></li>
+					<li>IP — Female: <strong>${data.ip_female ?? 0}</strong></li>
+					<li>IP (Total): <strong>${data.ip ?? ((data.ip_male ?? 0) + (data.ip_female ?? 0))}</strong></li>
 					<li>OSY — Male: <strong>${data.osy_male ?? 0}</strong></li>
 					<li>OSY — Female: <strong>${data.osy_female ?? 0}</strong></li>
 					<li>OSY (Total): <strong>${(data.osy != null) ? data.osy : ((data.osy_male ?? 0) + (data.osy_female ?? 0))}</strong></li>
@@ -562,18 +571,15 @@ function toBool(v) {
 function renderTopStats() {
 	const total = Array.isArray(allYouths) ? allYouths.length : 0;
 	const inSchool = Array.isArray(allYouths)
-		? allYouths.filter(y => toBool(y.is_in_school) || (y.full_data && toBool(y.full_data.is_in_school))).length
-		: 0;
+		? allYouths.filter(y => toBool(y.is_in_school) || (y.full_data && toBool(y.full_data.is_in_school))).length : 0;
 	const osy = Array.isArray(allYouths)
-		? allYouths.filter(y => toBool(y.is_osy) || (y.full_data && toBool(y.full_data.is_osy))).length
-		: 0;
+		? allYouths.filter(y => toBool(y.is_osy) || (y.full_data && toBool(y.full_data.is_osy))).length : 0;
 	const registered = Array.isArray(allYouths)
 		? allYouths.filter(y => {
 			const sk  = toBool(y.registered_voter_sk)  || (y.full_data && toBool(y.full_data.registered_voter_sk));
 			const nat = toBool(y.registered_voter_national) || (y.full_data && toBool(y.full_data.registered_voter_national));
 			return sk || nat;
-		}).length
-		: 0;
+		}).length : 0;
 
 	const set = (id, value) => { const el = document.getElementById(id); if (el) el.innerText = formatNumber(value); };
 	set('stat-total', total);
@@ -589,12 +595,9 @@ function renderTopStats() {
 async function fetchAggregatedStats() {
 	try {
 		let grandTotal = 0, grandOsy = 0;
-		const fetches = BARANGAYS.map(b =>
-			fetch(`/api/barangay_summary/${b.id}/`)
-				.then(r => r.ok ? r.json() : null)
-				.catch(() => null)
+		const results = await Promise.all(
+			BARANGAYS.map(b => fetch(`/api/barangay_summary/${b.id}/`).then(r => r.ok ? r.json() : null).catch(() => null))
 		);
-		const results = await Promise.all(fetches);
 		results.forEach(data => {
 			if (!data) return;
 			grandTotal += Number(data.total || 0);
@@ -706,7 +709,7 @@ function editYouth(id) {
 
 	Object.entries(mappings).forEach(([k,v]) => setVal(k, v));
 
-	const checks = ['is_in_school','is_osy','osy_willing_to_enroll','is_working_youth','is_pwd','has_specific_needs','is_ip','is_muslim','is_scholar','registered_voter_sk','registered_voter_national','voted_last_sk','attended_kk_assembly','is_4ps'];
+	const checks = ['is_in_school','is_osy','osy_willing_to_enroll','is_working_youth','is_unemployed_youth','is_pwd','has_specific_needs','is_ip','is_muslim','is_scholar','registered_voter_sk','registered_voter_national','voted_last_sk','attended_kk_assembly','is_4ps'];
 	checks.forEach(id => setChk(id, d[id] || y[id] || false));
 
 	toggleOSY();
@@ -743,6 +746,7 @@ function saveYouth(e) {
 		osy_program_type: getVal('osy_program_type'),
 		osy_reason_no_enroll: getVal('osy_reason_no_enroll'),
 		is_working_youth: getCheck('is_working_youth'),
+		is_unemployed_youth: getCheck('is_unemployed_youth'),
 		is_pwd: getCheck('is_pwd'),
 		disability_type: getVal('disability_type'),
 		has_specific_needs: getCheck('has_specific_needs'),
@@ -1040,9 +1044,12 @@ function validateGroupsTab() {
 	const isInSchool = !!document.getElementById('is_in_school') && document.getElementById('is_in_school').checked;
 	const isOsy = !!document.getElementById('is_osy') && document.getElementById('is_osy').checked;
 	const isWorking = !!document.getElementById('is_working_youth') && document.getElementById('is_working_youth').checked;
+	const isUnemployed = !!document.getElementById('is_unemployed_youth') && document.getElementById('is_unemployed_youth').checked;
+	const isIp = !!document.getElementById('is_ip') && document.getElementById('is_ip').checked;
+	const isPwd = !!document.getElementById('is_pwd') && document.getElementById('is_pwd').checked;
 
-	if (!isInSchool && !isOsy && !isWorking) {
-		showModalAlert('Please select at least one Youth Classification (In School / OSY / Working) in Groups/Needs.');
+	if (!isInSchool && !isOsy && !isWorking && !isUnemployed && !isIp && !isPwd) {
+		showModalAlert('Please select at least one Youth Classification in Groups/Needs.');
 		const first = document.getElementById('is_in_school') || document.getElementById('is_osy') || document.getElementById('is_working_youth');
 		if (first) first.focus();
 		return false;

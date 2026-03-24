@@ -9,3 +9,6 @@ psycopg2-binary
 dj-database-url
 gunicorn
 whitenoise
+asgiref
+sqlparse
+tzdata

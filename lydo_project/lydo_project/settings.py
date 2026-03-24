@@ -12,33 +12,23 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
-from urllib.parse import urlparse
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ------------------ Debug helpers (crucial) ------------------
-# Quick checklist to debug missing CSS/static templates:
-# - Ensure `TEMPLATES['DIRS']` points to the frontend folder so
-#   `{% load static %}` and `{% static 'style.css' %}` resolve correctly.
-# - During local development `DEBUG = True` lets Django serve files
-#   from the paths listed in `STATICFILES_DIRS` (set below).
-# - If you open the HTML file directly (file://) the `{% %}` tags
-#   are not processed — run the Django server and visit `/` instead.
-# - To rule out caching, hard-refresh browser or add `?v=1` to CSS URL.
-# ------------------------------------------------------------
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-tft%%3i$8q64@x(fjn!j!@39e&j7@nr5h#aj5a#i9m&4-uys53'
+# FIX 1: Secret key now read from environment variable. Set SECRET_KEY in Render → Environment.
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-tft%%3i$8q64@x(fjn!j!@39e&j7@nr5h#aj5a#i9m&4-uys53')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['youth-profiling-system.onrender.com']
-
+ALLOWED_HOSTS = ['youth-profiling-system.onrender.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -50,13 +40,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders',  # Add this line
+    'corsheaders',
     'monitoring',
 ]
 
+# FIX 2: Added WhiteNoise middleware (must be right after SecurityMiddleware)
+# to serve static files in production without DEBUG=True.
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # <-- added
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -67,11 +60,13 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'lydo_project.urls'
 
+# FIX 3: Corrected TEMPLATES DIRS path.
+# Previously pointed two levels up (../../frontend) which doesn't exist on Render.
+# Now correctly points to a 'frontend' folder at the repo root level.
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        # THIS IS THE CRITICAL FIX:
-        'DIRS': [os.path.join(BASE_DIR, '..', '..', 'frontend')],
+        'DIRS': [os.path.join(BASE_DIR, 'frontend')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -87,67 +82,28 @@ TEMPLATES = [
 WSGI_APPLICATION = 'lydo_project.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+# FIX 4: Database now reads from DATABASE_URL environment variable.
+# Set DATABASE_URL in Render → Environment using the connection string
+# from your Render PostgreSQL service (found under its "Connect" tab).
+# Falls back to local SQLite for development convenience.
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
-# Database configuration
-# Priority:
-# 1) `DATABASE_URL` env var (preferred)
-# 2) Individual POSTGRES_* env vars
-# 3) Fallback to local SQLite for development
-
-def _parse_database_url(url: str):
-    # Minimal DATABASE_URL parser (postgres://user:pass@host:port/dbname)
-    result = urlparse(url)
-    return {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': result.path.lstrip('/'),
-        'USER': result.username or 'postgres',
-        'PASSWORD': result.password or '',
-        'HOST': result.hostname or '127.0.0.1',
-        'PORT': str(result.port or '5432'),
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-
-
-# DATABASES placeholder and resolution order:
-# - If `DATABASE_URL` is set prefer that (supports dj-database-url)
-# - Else if any `POSTGRES_*` vars are set, use them
-# - Else fall back to local defaults
-# Example (keeps here as reference):
-# DATABASES = {}
-# if os.environ.get('DATABASE_URL'):
-#     # prefer dj-database-url if installed, otherwise use local parser
-#     try:
-#         import dj_database_url
-#
-#         DATABASES['default'] = dj_database_url.parse(os.environ['DATABASE_URL'], conn_max_age=600)
-#     except Exception:
-#         DATABASES['default'] = _parse_database_url(os.environ['DATABASE_URL'])
-#         DATABASES['default']['CONN_MAX_AGE'] = 600
-#         DATABASES['default']['OPTIONS'] = {'connect_timeout': 10}
-# elif os.environ.get('POSTGRES_DB') or os.environ.get('POSTGRES_USER') or os.environ.get('POSTGRES_PASSWORD') or os.environ.get('POSTGRES_HOST'):
-#     DATABASES['default'] = {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': os.environ.get('POSTGRES_DB', 'lydo'),
-#         'USER': os.environ.get('POSTGRES_USER', 'postgres'),
-#         'PASSWORD': os.environ.get('POSTGRES_PASSWORD', ''),
-#         # prefer IPv4 loopback to avoid IPv6 binding mismatch
-#         'HOST': os.environ.get('POSTGRES_HOST', '127.0.0.1'),
-#         'PORT': os.environ.get('POSTGRES_PORT', '5432'),
-#         'CONN_MAX_AGE': 600,
-#         'OPTIONS': {'connect_timeout': 10},
-#     }
-# else:
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'lydo',
-        'USER': 'postgres',
-        'PASSWORD': '2022303023',
-        'HOST': 'localhost',
-        'PORT': '5432',
+else:
+    # Local development fallback — uses SQLite so no local Postgres needed
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
 
 
 # Password validation
@@ -186,12 +142,21 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+# FIX 5: Added STATIC_ROOT so `collectstatic` has a destination.
+# This is required for WhiteNoise and for Render's build step.
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# FIX 6: Corrected STATICFILES_DIRS path (same fix as TEMPLATES DIRS above).
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, '..', '..', 'frontend'),
+    os.path.join(BASE_DIR, 'frontend'),
 ]
+
+# FIX 7: WhiteNoise compressed storage for efficient static file serving.
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 CORS_ALLOW_ALL_ORIGINS = True

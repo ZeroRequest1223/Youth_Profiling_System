@@ -61,12 +61,11 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'lydo_project.urls'
 
 # FIX 3: Corrected TEMPLATES DIRS path.
-# Previously pointed two levels up (../../frontend) which doesn't exist on Render.
-# Now correctly points to a 'frontend' folder at the repo root level.
+# BASE_DIR = lydo_project/ (outer), frontend/ is one level above it at repo root.
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'frontend')],
+        'DIRS': [os.path.join(BASE_DIR, '..', 'frontend')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -146,9 +145,9 @@ STATIC_URL = '/static/'
 # This is required for WhiteNoise and for Render's build step.
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# FIX 6: Corrected STATICFILES_DIRS path (same fix as TEMPLATES DIRS above).
+# FIX 6: Corrected STATICFILES_DIRS path — frontend is one level above BASE_DIR.
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'frontend'),
+    os.path.join(BASE_DIR, '..', 'frontend'),
 ]
 
 # FIX 7: WhiteNoise compressed storage for efficient static file serving.
